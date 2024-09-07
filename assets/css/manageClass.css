@@ -1,0 +1,633 @@
+.class-code0 {
+    padding: 10px 50px;
+    background-color: #797979cc;
+    font-size: 18px;
+    color: #fff;
+}
+
+.class-code1 {
+    padding: 10px 50px;
+    background-color: chartreuse;
+    font-size: 18px;
+    color: #fff;
+}
+
+.class-code2 {
+    padding: 10px 50px;
+    background-color: red;
+    font-size: 18px;
+    color: #fff;
+}
+
+.class-codeOff {
+    padding: 10px 50px;
+    background-color: #ccc;
+    font-size: 18px;
+    color: #fff;
+}
+
+.class-container a {
+    text-decoration: none;
+}
+
+.class {
+    position: relative;
+    color: inherit;
+}
+
+.class:hover {
+    background-color: #ccc;
+}
+
+.class .details {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #f9f9f9;
+    padding: 10px;
+    border: 1px solid #ccc;
+    opacity: 0;
+    transition: opacity 5s ease-in-out;
+    border-radius: 5px;
+}
+
+.class:hover .details {
+    display: block;
+    opacity: 1;
+}
+
+
+
+/* box add lớp */
+#overlay {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+#overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+#box {
+    opacity: 0;
+    transform: scale(1.5);
+    transition: opacity 0.3s, transform 0.3s;
+    background-color: #fff;
+    width: 60%;
+    height: 98vh;
+    overflow: auto;
+    padding: 0px 30px;
+    border-radius: 5px;
+}
+
+#box.active {
+    opacity: 1;
+    transform: scale(1);
+}
+
+#box #close-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: none;
+    border: none;
+    font-size: 50px;
+    cursor: pointer;
+    color: #0088cc;
+}
+
+#select-option {
+    width: 40%;
+}
+
+/* box của thẻ đóng */
+/* css phần add class */
+.card {
+    border: none;
+    padding: 0;
+    margin-bottom: 0;
+
+}
+
+.delete-button {
+    background-color: #e47272;
+    border: 1px solid #fff;
+    border-radius: 5px;
+    padding: 5px 6px;
+}
+
+#classTimeOpen {
+    padding: 8px;
+    font-size: 16px;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    background-color: #0088cc;
+    border-radius: 50%;
+}
+
+input[type="date"] {
+    color: #0088cc;
+}
+
+input {
+    outline: none;
+}
+
+.add-success,
+.add-success2,
+.update-success,
+.delete-success {
+    text-align: center;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: chartreuse;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    max-width: 200px;
+    width: 100%;
+    max-height: 700px;
+    display: none;
+    z-index: 99999;
+    color: #fff;
+}
+
+.delete-ques,
+.delete-cant,
+.delete-Option {
+    text-align: center;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #fe8787;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  max-width: 250px;
+  width: 100%;
+  max-height: 700px;
+  display: block;
+  
+}
+
+
+#modal-ques,
+#modal-ques2,
+#modal-ques3 {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: none;
+  z-index:10000;
+}
+
+/* box add lớp */
+#overlay2 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+#overlay2.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+#box2 {
+    opacity: 0;
+    transform: scale(1.5);
+    transition: opacity 0.3s, transform 0.3s;
+    background-color: #ffffff;
+    width: 60%;
+    height: 98vh;
+    overflow: auto;
+    padding: 0px 30px;
+    border-radius: 5px;
+}
+
+#box2.active {
+    opacity: 1;
+    transform: scale(1);
+}
+
+#box2 #close-btn2 {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: none;
+    border: none;
+    font-size: 50px;
+    cursor: pointer;
+    color: #0088cc;
+}
+
+
+/* css sửa xóa */
+.container-details {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.container-detail-class {
+    display: flex;
+}
+
+.container-p {
+    margin-top: 27px;
+    padding-left: 10px;
+}
+
+
+#SelectCondition,
+#teachers {
+    width: 40%;
+}
+
+.container {
+    position: relative;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+
+}
+
+.detailButton {
+    position: absolute;
+    bottom: -20px;
+    left: 20%;
+}
+
+.detailButton input {
+    background-color: red;
+    color: #fff;
+    padding: 10px;
+    font-size: 15px;
+    border-radius: 10px;
+    border: none;
+}
+
+.detailButton button {
+    background-color: chartreuse;
+    border: none;
+    font-size: 15px;
+    color: #fff;
+    border: 2px solid #0088cc;
+}
+
+#opten-listAttendance {
+    background-color: yellow;
+    color: chartreuse;
+    padding: 10px;
+    border: none;
+    font-size: 15px;
+    border-radius: 10px;
+}
+
+#opten-listStudents {
+    background-color: chartreuse;
+    color: yellow;
+    font-size: 15px;
+    padding: 10px;
+    border: none;
+    font-size: 15px;
+    border-radius: 10px;
+}
+
+.lbStyle {
+    margin-left: 20px;
+}
+
+
+/* css hiển thị boxStudent và điểm danh */
+#overlayAttendance,
+#overlayStudent {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+#overlayAttendance.active,
+#overlayStudent.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+#boxAttendance,
+#boxStudent {
+    opacity: 0;
+    transform: scale(1.5);
+    transition: opacity 0.3s, transform 0.3s;
+    background-color: #fff;
+    width: 60%;
+    height: 98vh;
+    overflow: auto;
+    padding: 0px 30px;
+    border-radius: 5px;
+}
+
+#boxAttendance.active,
+#boxStudent.active {
+    opacity: 1;
+    transform: scale(1);
+}
+
+#boxAttendance #closebtnAttendance,
+#boxStudent #closebtnstudents {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: none;
+    border: none;
+    font-size: 50px;
+    cursor: pointer;
+    color: #0088cc;
+}
+
+.detailTimeAttendance {
+    display: none;
+}
+
+/* css box time */
+#addboxDateDD,
+#details-17,
+#details-16,
+#details-15,
+#details-14,
+#details-13,
+#details-12,
+#details-11,
+#details-10,
+#details-9,
+#details-8,
+#details-7,
+#details-6,
+#details-5,
+#details-4,
+#details-1,
+#details-2,
+#details-3 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+#addboxDateDD.active,
+#details-17.active,
+#details-16.active,
+#details-15.active,
+#details-14.active,
+#details-13.active,
+#details-12.active,
+#details-11.active,
+#details-10.active,
+#details-9.active,
+#details-8.active,
+#details-7.active,
+#details-6.active,
+#details-5.active,
+#details-4.active,
+#details-2.active,
+#details-3.active,
+#details-1.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+#boxDateDD,
+#boxTime17,
+#boxTime16,
+#boxTime15,
+#boxTime14,
+#boxTime13,
+#boxTime12,
+#boxTime11,
+#boxTime10,
+#boxTime9,
+#boxTime8,
+#boxTime7,
+#boxTime6,
+#boxTime5,
+#boxTime4,
+#boxTime3,
+#boxTime2,
+#boxTime1 {
+    opacity: 0;
+    transform: scale(1.5);
+    transition: opacity 0.3s, transform 0.3s;
+    background-color: #ffffff;
+    width: 100%;
+    height: 98vh;
+    overflow: auto;
+    padding: 0px 30px;
+    border-radius: 5px;
+}
+
+#boxDateDD.active,
+#boxTime17.active,
+#boxTime16.active,
+#boxTime15.active,
+#boxTime14.active,
+#boxTime13.active,
+#boxTime12.active,
+#boxTime11.active,
+#boxTime10.active,
+#boxTime9.active,
+#boxTime8.active,
+#boxTime7.active,
+#boxTime6.active,
+#boxTime5.active,
+#boxTime4.active,
+#boxTime2.active,
+#boxTime3.active,
+#boxTime1.active {
+    opacity: 1;
+    transform: scale(1);
+}
+
+#closeboxDateDD,
+#closebtnboxTime17,
+#closebtnboxTime16,
+#closebtnboxTime15,
+#closebtnboxTime14,
+#closebtnboxTime13,
+#closebtnboxTime12,
+#closebtnboxTime11,
+#closebtnboxTime10,
+#closebtnboxTime9,
+#closebtnboxTime8,
+#closebtnboxTime7,
+#closebtnboxTime6,
+#closebtnboxTime5,
+#closebtnboxTime4,
+#closebtnboxTime3,
+#closebtnboxTime2,
+#closebtnboxTime1 {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: none;
+    border: none;
+    font-size: 50px;
+    cursor: pointer;
+    color: #0088cc;
+}
+
+
+.center-listClass {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+#open-btn {
+    background-color: #0088cc;
+    color: #fff;
+    padding: 10px;
+    font-size: 15px;
+    border-radius: 10px;
+}
+
+.timkiem {
+    padding: 10px 10px;
+    border: 1px solid #0088cc;
+}
+
+#province {
+    border: 1px solid #0088cc;
+    outline: #0088cc;
+}
+
+#endDiscount,
+#startDiscount {
+    padding: 8px;
+    font-size: 16px;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+    margin-top: 10px;
+}
+
+#discountpercent {
+    width: 40%;
+}
+
+.detailButton button {
+    margin-left: 10px;
+}
+
+#yesDelete,
+#noDelete {
+    padding: 5px 10px;
+    width: 70px;
+
+}
+
+#noDelete {
+    margin-left: 20px;
+
+}
+
+
+button:hover,
+input[type='submit']:hover {
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+#listdday tr:hover {
+
+
+    cursor: pointer;
+}
+
+
+#addSchedules {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#btn-update {
+    width: 100%;
+    background-color: #4CAF50;
+    color: #fff;
+    padding: 14px 20px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#btn-add-schedule{
+    padding: 5px;
+    border-radius: 5px;
+    background-color: lawngreen;
+    width: 70px;
+}
+
+#btn-delete-schedule{
+    padding: 5px;
+    border-radius: 5px;
+    background-color: orangered;
+    width: 70px;
+}

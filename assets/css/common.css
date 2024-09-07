@@ -1,0 +1,163 @@
+.page-dialog-wrap{
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0,0,0, 0.2);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+.page-dialog-inner{
+    padding: 16px;
+    background-color: #fff;
+    border-radius: 16px;
+}
+.page-dialog-title{
+    font-size: 26px;
+    font-weight: 700;
+    padding: 12px 0 28px 8px;
+}
+.btn-dialog-wrap{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.close-dialog-btn{
+    padding: 9px 16px;
+    border: none;
+    background-color: #b4afaf;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: 16px;
+    cursor: pointer;
+}
+.close-dialog-btn:hover{
+    box-shadow: #b4afaf 0px 0px 4px;
+}
+.open-dialog{
+    display: flex!important;
+}
+.menubar-dropdown{
+    position: relative;
+  
+  }
+.menubar-dropdown-menu{
+    display: none;
+    position: absolute;
+    top: 28px;
+    left: -140px;
+    padding: 8px 16px;
+    background-color: #fff;
+    border-radius: 8px;
+    list-style-type: none;
+    min-width: 140px;
+    overflow-y: hidden;
+    transition: .4s;
+  }
+  .menubar-dropdown-menu form {
+    margin-bottom: 0;
+  }
+  .menubar-show{
+    display: block!important;
+  }
+  .menubar-dropdown-item{
+    padding: 6px 0px;
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 12px;
+  }
+  .menubar-dropdown-item >a{
+    text-decoration: none;
+    color: rgba(0,0,0);
+    cursor: pointer;
+  }
+  .menubar-dropdown-item>a:hover , #btn-logout:hover{
+    color: #0d7cd0;
+  }
+  .menubar-avt-wrap{
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: solid 1px rgb(182, 182, 182);
+    cursor: pointer;
+  }
+  .menubar-avt{
+    width: 100%;
+  }
+  .menubar-left{
+    display: flex;
+    align-items: center;
+  }
+  .menubar-nav{
+    margin-right: 36px;
+    padding: 12px 18px;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    background-color: inherit;
+    text-decoration: none;
+    border-radius: 16px;
+  }
+  .menubar-nav:hover{
+    color: #0a58ca;
+  }
+  .menubar-active {
+    color: #0a58ca;
+
+  }
+  .last-nav{
+    margin-right: 240px;
+  }
+  .menubar-info{
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    margin-right: 24px;
+  }
+  .menubar-name{
+    color: #fff;
+    font-size: 16px;
+  }
+  .toast {
+    top: 100px;
+    right: 15px;
+    z-index: 9999;
+  }
+  .toast-header-cus{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .toast-header button {
+    border: none;
+    color: #fff;
+    font-size: 20px;
+
+    background-color: inherit;
+  }
+  .toast-header.toast-success {
+    background-color: #4cb050;
+    color: #fff;
+  }
+  
+  .toast-header.toast-fail {
+    background-color: #e51c24;
+    color: #fff;
+
+  }
+  @keyframes menubar-show {
+    0%{
+        height: 0%;
+    }
+    50%{
+        height: 50%;
+    }
+    100%{
+        height: 100%;
+    }
+  }
+

@@ -1,0 +1,177 @@
+.container-dialog{
+    border-radius: 12px;
+}
+.container-title{
+    margin-top: 12px;
+    text-align: center;
+    color: #0088cc;
+    font-size: 24px;
+}
+.regiter-class-btn-now{
+    padding: 8px;
+    border-radius: 30px;
+    border: none;
+    border: 1px solid #0088cc;
+    font-size: 17px;
+    background-color: #ffd95c;
+    color: #0088cc;
+}
+.register-back-wrap{
+    position: absolute;
+    left: 40px;
+    top: 60px;
+    padding: 8px;
+}
+.register-back-btn{
+    border: 1px solid #0088cc;
+    font-size: 21px;
+    background-color: #ffd95c;
+    color: #0088cc;
+
+}
+.container-border{
+    min-width: 800px;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    border-radius: 12px;
+    padding-bottom: 24px;
+}
+.register-now-btn-bottom{
+    border: 1px solid #0088cc;
+    background-color: #ffd95c;
+    color: #0088cc;
+    width: 100%;
+    border-radius: 36px;
+    margin-top: 12px;
+    font-size: 24px;
+    text-align: center;
+    font-weight: 600;
+    padding: 12px;
+}
+#showButtons.register-now-btn-bottom{
+    font-size: 21px;
+}
+.register-class-bg{
+    height: 59%;
+    position: absolute;
+    bottom: -5px;
+    right: 0;
+    left: 0;
+}
+.register-class-bg img {
+    height: 100%;
+    object-fit: cover;
+
+}
+.register-main{
+    position: relative;
+    padding: 40px 0 60px;
+    margin-top: 45px;
+}
+.register-content-wrap{
+    position: relative;
+}
+.hidden-wrap{
+    display: none;
+}
+.dialog-wrap{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+.dialog-wrap.active{
+    opacity: 1;
+    visibility: visible;
+}
+.dialog-container {
+    opacity: 0;
+    transform: scale(1.5);
+    transition: opacity 0.3s, transform 0.3s;
+    background-color: #fff;
+    overflow: auto;
+    padding: 30px;
+    border-radius: 5px;
+}
+
+.dialog-container.active {
+    opacity: 1;
+    transform: scale(1);
+}
+.dialog-select-btn{
+    padding: 8px 12px;
+    border: #0088cc 1px;
+    border-radius: 12px;
+    margin-bottom: 6px;
+}
+
+.dialog-selected-item {
+    background-color: #30dd0e;
+}
+.dialog-select-btn:hover{
+    background-color: #0088cc;
+    cursor: pointer;
+}
+.text-register-bottom{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 21px;
+    color: #db5e15;
+    margin-top: 16px;
+
+}
+.dialog-content-btn{
+    padding: 6px 12px;
+    border-radius: 30px;
+    border: 1px solid #ccc;
+    color: #fff;
+    font-size: 16px;
+}
+.dialog-content-btn-wrap{
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 18px;
+}
+#close-btn-confirm{
+    background-color: #f01616;
+}
+#confirm-btn {
+    background-color: #2cc139;
+}
+.dialog-select-btn  {
+    padding: 6px 12px;
+    border-radius: 30px;
+    border: 1px solid #ccc;
+    min-width: 120px;
+}
+.container-chosen-div {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+.selectItemsChild{
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+.register-div-add{
+    min-width: 220px;
+}
