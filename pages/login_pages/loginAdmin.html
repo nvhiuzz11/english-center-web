@@ -1,0 +1,229 @@
+<!-- <?php
+
+$path_dir = __DIR__.'/../../lib';  
+include $path_dir.'/function.php';
+
+$userName = $passWord = "";
+$userName_error = $passWord_error = "";
+
+if (isset($_POST['submit'])) {
+	if (empty($_POST['username'])) {
+		$userName_error = "Bạn chưa nhập tên đăng nhập!";
+	} else {
+		$userName = htmlspecialchars($_POST['username']);
+	}
+	if (empty($_POST['password'])) {
+		$passWord_error = "Bạn chưa nhập mật khẩu!";
+	} else {
+		$passWord = htmlspecialchars($_POST['password']);
+	}
+}
+
+$test = false;
+
+if (isset($_POST['submit'])) {
+	$test = empty($userName_error) && empty($passWord_error);
+
+}
+
+
+if ($test) {
+    $result = checkAcountAdmin($userName, $passWord, $connection);
+    if ($result) {
+        
+        header("Location: ../../manage/ListClass.php");
+		
+        exit();
+    } else {
+        $passWord_error = "Tài khoản hoặc mật khẩu bạn sai";
+    }
+}
+
+
+?> -->
+
+
+
+<!DOCTYPE html>
+<html>
+
+<head>
+	<link rel="icon" href="../../assets/images/logo-web.png" type="image/x-icon">
+	<meta charset="UTF-8">
+	<title>Admin Login</title>
+	<style>
+		body {
+			background-color: #333;
+		}
+
+		.login {
+			width: 400px;
+			background-color: #fff;
+			margin: 10% auto;
+			padding: 40px;
+			border-radius: 10px;
+			box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+		}
+
+		.login h1 {
+			text-align: center;
+			color: #333;
+			font-size: 32px;
+			margin-bottom: 20px;
+			font-weight: normal;
+		}
+
+		.login input[type="text"],
+		.login input[type="password"] {
+			width: 100%;
+			padding: 10px;
+			border: none;
+			background-color: #f5f5f5;
+			margin-bottom: 20px;
+			font-size: 16px;
+			border-radius: 5px;
+			box-shadow: none;
+		}
+
+		.login input[type="submit"] {
+			width: 105%;
+			background-color: #333;
+			color: #fff;
+			padding: 10px;
+			border: none;
+			border-radius: 5px;
+			font-size: 18px;
+			cursor: pointer;
+			transition: background-color 0.3s ease-in-out;
+		}
+
+		.login input[type="submit"]:hover {
+			background-color: #444;
+		}
+
+
+
+		.back:hover {
+			color: #aaa;
+		}
+
+		.back {
+			width: 100%;
+			background-color: yellowgreen;
+			color: #fff;
+			padding: 10px;
+			border: none;
+			border-radius: 5px;
+			font-size: 18px;
+			cursor: pointer;
+			transition: background-color 0.3s ease-in-out;
+			margin-top: 15px;
+			text-align: center;
+			display: inline-block;
+		}
+	</style>
+</head>
+
+<body>
+
+	<div class="login">
+		<h1>Admin Login</h1>
+
+		<form id="loginForm">
+			<input type="text" name="username" placeholder="Username" id="username">
+			<p id="usernameError" style="color:red; margin-bottom: 20px; font-size: 18px;"></p>
+		
+			<input type="password" name="password" placeholder="Password" id="password">
+			<p id="passwordError" style="color:red; margin-bottom: 20px; font-size: 18px;"></p>
+		
+			<input type="submit" id="submitButton" value="Login">
+		
+			<!-- Thêm khu vực để spinner hiển thị -->
+			
+		</form>
+		<div id="spinner" style="display: none; margin-top: 20px; align-items: center; justify-content: center;">
+			<img src="https://cdn.pixabay.com/animation/2023/10/08/03/19/03-19-26-213_512.gif" alt="Loading..."
+				style="width: 30px; height: 30px;">
+		</div>
+		<a href="./login.php" class="back">Back</a>
+	</div>
+	
+</body>
+
+
+
+<script>
+	const apiUrl = "https://english-center-backend.vercel.app";
+
+	document.getElementById('loginForm').addEventListener('submit', function (event) {
+		document.getElementById('usernameError').textContent = '';
+		document.getElementById('passwordError').textContent = '';
+			event.preventDefault(); 
+
+			const submitButton = document.getElementById('submitButton');
+			const spinner = document.getElementById('spinner');
+
+		
+			submitButton.value = 'Loading...';
+			submitButton.disabled = true;
+			spinner.style.display = 'block';
+
+			
+			const username = document.getElementById('username').value;
+			const password = document.getElementById('password').value;
+
+		
+			if (!username || !password) {
+				document.getElementById('usernameError').textContent = !username ? 'Chưa nhập username' : '';
+				document.getElementById('passwordError').textContent = !password ? 'Chưa nhập passowrd' : '';
+
+			
+				submitButton.value = 'Login';
+				submitButton.disabled = false;
+				spinner.style.display = 'none';
+				return;
+			}
+
+			fetch(`${apiUrl}/api/auth/login`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					userName: username,
+					password: password,
+				}),
+			})
+				.then(response => {
+					if (!response.ok) {
+						throw new Error('Login failed');
+					}
+					return response.json();
+				})
+				.then(data => {
+					
+					console.log('Login successful:', data);
+					localStorage.setItem('accessToken', data.accessToken);
+					localStorage.setItem('refreshToken', data.refreshToken);
+					//alert('Đăng nhập thành công');
+
+					 window.location.href = '../../manage/ListClass.php';
+				})
+				.catch(error => {
+					console.error('Error:', error);
+					document.getElementById('usernameError').textContent = 'Sai thông tin đăng nhập';
+					document.getElementById('passwordError').textContent = 'Sai thông tin đăng nhập';
+				})
+				.finally(() => {
+					
+					submitButton.value = 'Login';
+					submitButton.disabled = false;
+					spinner.style.display = 'none';
+				});
+		});
+
+
+
+</script>
+
+</html>

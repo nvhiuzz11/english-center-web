@@ -58,7 +58,7 @@ if ($test) {
 
 <body>
     <div class="admin-login" style="float : right">
-        <button><a href="./loginAdmin.php">Đăng nhập Admin</a></button>
+        <button><a href="./loginAdmin.html">Đăng nhập Admin</a></button>
     </div>
 
     <div class="login-star">
