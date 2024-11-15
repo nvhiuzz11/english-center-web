@@ -578,7 +578,7 @@ function createclassActiveChart() {
 }
 
 var selectYear = document.getElementById("select-year");
-var currentYearClass;
+var currentYearClass = new Date().getFullYear();
 selectYear.addEventListener("change", function () {
   currentYearClass = selectYear.value;
 
