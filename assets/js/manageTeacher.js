@@ -4,10 +4,20 @@ const CLASS_STATUS = {
   CLOSE: 3,
 };
 
+var selectedCenter = "";
 var countData;
 var currentPage = 1;
 var ds_giaovien;
+var listCenter;
 const accessToken = localStorage.getItem("accessToken");
+
+const store_ds_giaovien = localStorage.getItem("ds_giaovien");
+if (store_ds_giaovien) {
+  ds_giaovien = JSON.parse(store_ds_giaovien);
+  showTableTeacher(ds_giaovien, selectedCenter, "");
+}
+
+listCenter = JSON.parse(localStorage.getItem("listCenter"));
 
 fetchTeacher();
 
@@ -20,7 +30,9 @@ function hideSpinner() {
 }
 
 async function fetchTeacher() {
-  showSpinner();
+  if (!ds_giaovien) {
+    showSpinner();
+  }
   try {
     const res = await fetch(`${API_URL}/api/teacher?includeClass=true`, {
       method: "GET",
@@ -34,15 +46,55 @@ async function fetchTeacher() {
 
       ds_giaovien = resData.docs;
       console.log("ds_giaovien", ds_giaovien);
+      localStorage.setItem("ds_giaovien", JSON.stringify(ds_giaovien));
+
       countData = ds_giaovien.length;
 
-      showTableTeacher(ds_giaovien, "");
+      showTableTeacher(ds_giaovien, selectedCenter, "");
 
       hideSpinner();
     }
   } catch (error) {
     hideSpinner();
     console.log("fetchTeacher error", error);
+  }
+}
+
+fetchCenter();
+
+async function fetchCenter() {
+  fetch(`${API_URL}/api/centers?includeClass=true`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      listCenter = data.docs;
+
+      var select1 = document.getElementById("select-center");
+
+      listCenter.forEach((center) => {
+        const option = document.createElement("option");
+        option.value = center.id;
+        option.text = `Cơ sở ${center.id}: ${center.name}`;
+
+        select1.appendChild(option);
+      });
+
+      localStorage.setItem("listCenter", JSON.stringify(listCenter));
+    })
+    .catch((error) => {
+      console.log("Error:", error);
+    });
+}
+
+function getCenterNameById(id) {
+  if (!listCenter) return "";
+  else {
+    const center = listCenter.find((center) => center.id === id);
+    return center ? center.name : "";
   }
 }
 
@@ -101,16 +153,20 @@ function getRecordByPage(list, page, pageSize = 50) {
   return list.slice(startIndex, endIndex);
 }
 
-function showTableTeacher(list, text) {
+function showTableTeacher(list, center, text) {
   let i = 1;
 
   const tableBody = document.querySelector(".tbody-1");
   tableBody.innerHTML = "";
 
-  if (!list || list.length === 0) {
-    if (text != "") {
-      tableBody.innerHTML += `<h2>Không tìm thấy kết quả phù hợp "${text}"</h2>`;
-    }
+  if (center) {
+    list = list.filter((teacher) =>
+      teacher?.classes.some((classItem) => classItem.centerId == center)
+    );
+  }
+
+  if (!list || list.length == 0) {
+    tableBody.innerHTML += `<h2>Không tìm thấy kết quả phù hợp!</h2>`;
   } else {
     const listItem = getRecordByPage(list, currentPage, 50);
     listItem.forEach((item) => {
@@ -133,6 +189,13 @@ function showTableTeacher(list, text) {
   showindex();
 }
 
+var selectCenter = document.getElementById("select-center");
+
+selectCenter.addEventListener("change", function () {
+  selectedCenter = selectCenter.value;
+  searchList(1);
+});
+
 // search
 function searchKey(keyword) {
   const lowerKeyword = keyword.toLowerCase();
@@ -151,7 +214,7 @@ function searchList(number = 1) {
   var text = document.getElementById("keyword").value;
   const listSearch = searchKey(text);
   currentPage = number;
-  showTableTeacher(listSearch, text);
+  showTableTeacher(listSearch, selectedCenter, text);
   removeSortIcons();
 }
 
@@ -307,6 +370,13 @@ document.querySelector(".tbody-1").addEventListener("click", function (event) {
           "</tr>" +
           "<tr>" +
           "<td>" +
+          "<p >Cơ sở: " +
+          getCenterNameById(item.centerId) +
+          "</p>" +
+          "</td>" +
+          "</tr>" +
+          "<tr>" +
+          "<td>" +
           '<p id="status-class" style ="color:' +
           color +
           '" >Trạng thái:  ' +
@@ -323,17 +393,19 @@ document.querySelector(".tbody-1").addEventListener("click", function (event) {
 
     //thong tin tai khoan
 
-    // for (var i = 0; i < ds_tk_gv.length; i++) {
-    //   if (ds_tk_gv[i].MaGV === teacher_select.MaGV) {
-    //     document.getElementById("name-login").textContent =
-    //       ds_tk_gv[i]["UserName"];
-    //     document.getElementById("username-login").value =
-    //       ds_tk_gv[i]["UserName"];
-    //     document.getElementById("password").value = ds_tk_gv[i]["Password"];
-    //     document.getElementById("date_logup").textContent =
-    //       "Ngày đăng ký  :  " + convertDateFormat(ds_tk_gv[i]["NgayDK"]);
-    //   }
-    // }
+    document.getElementById("name-login").textContent =
+      teacher_select.user.userName;
+    document.getElementById("username-login").value =
+      teacher_select.user.userName;
+    document.getElementById("date_logup").textContent =
+      "Ngày đăng ký  :  " + formatDateFromISO(teacher_select.createdAt);
+
+    // document.getElementById("name-login").textContent =
+    //   teacher_select.user.userName;
+    // document.getElementById("username-login").value =
+    //   teacher_select.user.userName;
+    // document.getElementById("date_logup").textContent =
+    //   "Ngày đăng ký  :  " + formatDateFromISO(teacher_select.createdAt);
 
     modalBg.style.display = "block";
   }
@@ -357,9 +429,7 @@ editButton.addEventListener("click", () => {
   document.getElementById("lb_phone_edit").textContent = "";
   document.getElementById("lb_email_edit").textContent = "";
   document.getElementById("lb_name_edit").textContent = "";
-  document.getElementById("lb_hometown_edit").textContent = "";
   document.getElementById("lb_address_edit").textContent = "";
-  document.getElementById("lb_education_edit").textContent = "";
 
   document.getElementById("lb_birthday_edit").textContent = "";
 
@@ -381,11 +451,9 @@ editButton.addEventListener("click", () => {
   document.getElementById("age_edit").value = teacher_select.age;
   document.getElementById("teacher-id_edit").textContent =
     "Mã Giáo viên : " + teacher_select.id;
-  //   document.getElementById("hometown_edit").value = teacher_select.QueQuan;
   document.getElementById("address_edit").value = teacher_select.address;
   document.getElementById("phone_number_edit").value = teacher_select.phone;
   document.getElementById("email_edit").value = teacher_select.email;
-  //   document.getElementById("education_edit").value = teacher_select.TrinhDo;
   document.getElementById("id_edit").value = teacher_select.id;
 });
 
@@ -406,9 +474,8 @@ submit_update.addEventListener("click", async function (event) {
 
   const teacher_name = document.getElementById("teacher_name_edit").value;
   const age = document.getElementById("age_edit").value;
-  const hometown = document.getElementById("hometown_edit").value;
+
   const address = document.getElementById("address_edit").value;
-  const education = document.getElementById("education_edit").value;
   const birthday = document.getElementById("birthday_edit").value;
 
   var erorr_empty = "*Dữ liệu không để trống";
@@ -424,19 +491,10 @@ submit_update.addEventListener("click", async function (event) {
     check = false;
   } else document.getElementById("lb_birthday_edit").textContent = "";
 
-  //   if (!hometown) {
-  //     document.getElementById("lb_hometown_edit").textContent = erorr_empty;
-  //     check = false;
-  //   } else document.getElementById("lb_hometown_edit").textContent = "";
-
   if (!address) {
     document.getElementById("lb_address_edit").textContent = erorr_empty;
     check = false;
   } else document.getElementById("lb_address_edit").textContent = "";
-  //   if (!education) {
-  //     document.getElementById("lb_education_edit").textContent = erorr_empty;
-  //     check = false;
-  //   } else document.getElementById("lb_education_edit").textContent = "";
   if (!/^(0[0-9]{9})$/.test(phone_number)) {
     document.getElementById("lb_phone_edit").textContent =
       "*Số điện thoại không chính xác (0..; 10 chữ số)";
@@ -450,66 +508,6 @@ submit_update.addEventListener("click", async function (event) {
   } else document.getElementById("lb_email_edit").textContent = "";
 
   if (!check) return;
-  //   document.querySelector(".update-success").style.display = "block";
-
-  //   $.ajax({
-  //     type: "POST",
-  //     url: "../api/updateInforTeacher.php",
-  //     data: {
-  //       id: id,
-  //       name: teacher_name,
-  //       gender: gender,
-  //       date: birthday,
-  //       age: age,
-  //       address: address,
-  //       phone: phone_number,
-  //       email: email,
-  //       hometown: hometown,
-  //       education: education,
-  //     },
-  //     success: function (res) {
-  //       ds_giaovien = JSON.parse(res);
-  //       for (var i = 0; i < ds_giaovien.length; i++) {
-  //         if (ds_giaovien[i].MaGV === teacher_select.MaGV) {
-  //           teacher_select = ds_giaovien[i];
-  //           break;
-  //         }
-  //       }
-
-  //       document.getElementById("teacher-name").textContent =
-  //         teacher_select.TenGV;
-  //       document.getElementById("teacher-gender").textContent =
-  //         teacher_select.GioiTinh;
-  //       document.getElementById("teacher-age").textContent = teacher_select.Tuoi;
-  //       document.getElementById("teacher-id").textContent = teacher_select.MaGV;
-  //       document.getElementById("teacher-qq").textContent =
-  //         teacher_select.QueQuan;
-  //       document.getElementById("teacher-address").textContent =
-  //         teacher_select.DiaChi;
-  //       document.getElementById("teacher-date").textContent = convertDateFormat(
-  //         teacher_select.NgaySinh
-  //       );
-  //       document.getElementById("teacher-phone").textContent = teacher_select.SDT;
-  //       document.getElementById("teacher-email").textContent =
-  //         teacher_select.Email;
-  //       document.getElementById("teacher-qualification").textContent =
-  //         teacher_select.TrinhDo;
-
-  //       var img = document.getElementById("img");
-
-  //       if (teacher_select.GioiTinh == "Nam") {
-  //         img.src = "../assets/images/Teacher-male-icon.png";
-  //       } else {
-  //         img.src = "../assets/images/Teacher-female-icon.png";
-  //       }
-
-  //       var text = document.getElementById("keyword").value;
-  //       showTableTeacher(text, currentPage, collum, orderby);
-  //     },
-  //     error: function (xhr, status, error) {
-  //       console.error(error);
-  //     },
-  //   });
 
   showSpinner();
   try {
@@ -621,16 +619,12 @@ document.querySelector(".cancle-btn-add").addEventListener("click", () => {
   document.getElementById("email_add").value = "";
   document.getElementById("teacher_name_add").value = "";
   document.getElementById("age_add").value = "";
-  document.getElementById("hometown_add").value = "";
   document.getElementById("address_add").value = "";
-  document.getElementById("education_add").value = "";
   document.getElementById("birthday_add").value = "";
   document.getElementById("lb_name_add").textContent = "";
 
   document.getElementById("lb_birthday_add").textContent = "";
-  document.getElementById("lb_hometown_add").textContent = "";
   document.getElementById("lb_address_add").textContent = "";
-  document.getElementById("lb_education_add").textContent = "";
   document.getElementById("lb_phone_add").textContent = "";
   document.getElementById("lb_email_add").textContent = "";
 });
@@ -644,9 +638,7 @@ submit_add.addEventListener("click", async function (event) {
   const email = document.getElementById("email_add").value;
   const teacher_name = document.getElementById("teacher_name_add").value;
   const age = document.getElementById("age_add").value;
-  const hometown = document.getElementById("hometown_add").value;
   const address = document.getElementById("address_add").value;
-  const education = document.getElementById("education_add").value;
   const birthday = document.getElementById("birthday_add").value;
   const gender = document.getElementById("gender_add").value;
   var erorr_empty = "*Dữ liệu không để trống";
@@ -663,19 +655,11 @@ submit_add.addEventListener("click", async function (event) {
     check = false;
   } else document.getElementById("lb_birthday_add").textContent = "";
 
-  //   if (!hometown) {
-  //     document.getElementById("lb_hometown_add").textContent = erorr_empty;
-  //     check = false;
-  //   } else document.getElementById("lb_hometown_add").textContent = "";
-
   if (!address) {
     document.getElementById("lb_address_add").textContent = erorr_empty;
     check = false;
   } else document.getElementById("lb_address_add").textContent = "";
-  //   if (!education) {
-  //     document.getElementById("lb_education_add").textContent = erorr_empty;
-  //     check = false;
-  //   } else document.getElementById("lb_education_add").textContent = "";
+
   if (!/^(0[0-9]{9})$/.test(phone_number)) {
     document.getElementById("lb_phone_add").textContent =
       "*Số điện thoại không chính xác (0[0-9]; 10 chữ số)";
@@ -689,30 +673,6 @@ submit_add.addEventListener("click", async function (event) {
   } else document.getElementById("lb_email_add").textContent = "";
 
   if (!check) return;
-
-  //   $.ajax({
-  //     url: "../api/addTeacher.php",
-  //     type: "POST",
-  //     data: {
-  //       name: teacher_name,
-  //       gender: gender,
-  //       date: birthday,
-  //       age: age,
-  //       address: address,
-  //       phone: phone_number,
-  //       email: email,
-  //       hometown: hometown,
-  //       education: education,
-  //     },
-  //     success: function (res) {
-  //       ds_giaovien = JSON.parse(res);
-  //       var text = document.getElementById("keyword").value;
-  //       showTableTeacher(text, currentPage, collum, orderby);
-  //     },
-  //     error: function (xhr, status, error) {
-  //       console.error(error);
-  //     },
-  //   });
 
   showSpinner();
   try {
@@ -748,9 +708,8 @@ submit_add.addEventListener("click", async function (event) {
       document.getElementById("email_add").value = "";
       document.getElementById("teacher_name_add").value = "";
       document.getElementById("age_add").value = "";
-      document.getElementById("hometown_add").value = "";
+
       document.getElementById("address_add").value = "";
-      document.getElementById("education_add").value = "";
       document.getElementById("birthday_add").value = "";
 
       document.querySelector(".add-success").style.display = "block";
@@ -880,70 +839,70 @@ document.getElementById("change-pass-btn").addEventListener("click", () => {
   document.getElementById("div-change-pass").style.display = "block";
 });
 
-document.getElementById("change").addEventListener("click", function (event) {
-  event.preventDefault();
+document
+  .getElementById("change")
+  .addEventListener("click", async function (event) {
+    event.preventDefault();
 
-  var pass = document.getElementById("new-password").value;
+    var pass = document.getElementById("new-password").value;
 
-  var username = document.getElementById("username-login").value;
+    var username = document.getElementById("username-login").value;
 
-  var err_pass = "";
-  var err_username = "";
-  var check = true;
+    var err_pass = "";
+    var err_username = "";
+    var check = true;
 
-  if (!pass) {
-    err_pass = "*Bạn chưa nhập mật khẩu";
-    check = false;
-  }
-  if (!username) {
-    err_username = "*Bạn chưa nhập tên tài khoản";
-    check = false;
-  }
+    if (!pass) {
+      err_pass = "*Bạn chưa nhập mật khẩu";
+      check = false;
+    } else if (pass.length < 8) {
+      err_pass = "*Mật khẩu cần ít nhất 8 ký tự";
+      check = false;
+    }
+    // if (!username) {
+    //   err_username = "*Bạn chưa nhập tên tài khoản";
+    //   check = false;
+    // }
+    document.getElementById("err-pass").textContent = err_pass;
+    document.getElementById("err-username").textContent = err_username;
 
-  document.getElementById("err-pass").textContent = err_pass;
-  document.getElementById("err-username").textContent = err_username;
-
-  if (!check) {
-    return;
-  }
-
-  $.ajax({
-    url: "../api/changeAccTeacher.php",
-    type: "POST",
-    data: {
-      id: teacher_select.MaGV,
-      username: username,
-      pass: pass,
-    },
-    success: function (res) {
-      ds_tk_gv = JSON.parse(res);
-
-      for (var i = 0; i < ds_tk_gv.length; i++) {
-        if (ds_tk_gv[i].MaGV === teacher_select.MaGV) {
-          document.getElementById("name-login").textContent =
-            ds_tk_gv[i]["UserName"];
-          document.getElementById("username-login").value =
-            ds_tk_gv[i]["UserName"];
-          document.getElementById("password").value = ds_tk_gv[i]["Password"];
-          document.getElementById("date_logup").textContent =
-            "Ngày đăng ký  :  " + convertDateFormat(ds_tk_gv[i]["NgayDK"]);
-          break;
+    if (!check) {
+      return;
+    }
+    showSpinner();
+    try {
+      const response = await fetch(
+        `${API_URL}/api/user-password-by-admin/${teacher_select.userId}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            password: pass,
+          }),
         }
-      }
-    },
-    error: function (xhr, status, error) {
-      console.error(error);
-    },
-  });
-  document.getElementById("div-change-pass").style.display = "none";
-  document.querySelector(".change-pass-success").style.display = "block";
+      );
 
-  setTimeout(function () {
-    document.querySelector(".change-pass-success").style.display = "none";
-    document.getElementById("err-pass").textContent = "";
-    document.getElementById("err-username").textContent = "";
-  }, 1000);
-});
+      if (response.status === 200) {
+        hideSpinner();
+
+        document.getElementById("new-password").value = "";
+        document.getElementById("div-change-pass").style.display = "none";
+        document.querySelector(".change-pass-success").style.display = "block";
+
+        setTimeout(function () {
+          document.querySelector(".change-pass-success").style.display = "none";
+          document.getElementById("err-pass").textContent = "";
+          document.getElementById("err-username").textContent = "";
+        }, 1000);
+      }
+    } catch (error) {
+      console.error("api error", error);
+      hideSpinner();
+    }
+  });
 
 document.getElementById("cancle-change-pass").addEventListener("click", () => {
   document.getElementById("div-change-pass").style.display = "none";

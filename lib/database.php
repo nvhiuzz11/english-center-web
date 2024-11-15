@@ -1,8 +1,8 @@
 <?php
 define("DATABASE_SEVER", "localhost");
-define("DATABASE_USER", "nmfjbsaa_englishcenter");
-define("DATABASE_PASSWORD", "Li-Vh}xoD&hi");
-define("DATABASE_NAME", "nmfjbsaa_englishcenter");
+define("DATABASE_USER", "dvdungfu_englishcenter");
+define("DATABASE_PASSWORD", "Js-k6POLn3,C");
+define("DATABASE_NAME", "dvdungfu_englishcenter");
 $connection = null;
 try {
     $connection = new PDO(

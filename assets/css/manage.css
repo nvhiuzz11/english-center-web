@@ -238,7 +238,7 @@ button:hover, input[type='submit']:hover{
   	display: flex;
   	justify-content: center;
   	align-items: center;
-  	z-index: 9999;
+  	z-index: 99999999;
   	/* Đảm bảo nằm trên cùng */
   	display: none;
   	/* Ẩn lớp phủ ban đầu */

@@ -1,29 +1,3 @@
-<?php
-require '../lib/functionFin_OtherFee.php';
-
-// $listBill = listBill($connection);
-
-$listBill = searchChiPhiKhac($connection, "","","");
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    if (isset($_POST['refesh'])) {
-        header("Location: manageFinance_OtherFee.php");
-    }
-
-   
-
-}
-
-$jslistBill = json_encode($listBill);
-
-
-
-?>
-
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -43,14 +17,15 @@ $jslistBill = json_encode($listBill);
         </div>
         <nav>
             <ul>
-                <li><a href="./ListClass.php">Quản lý lớp học</a></li>
+                <li><a href="./manageClass.html">Quản lý lớp học</a></li>
                 <li><a href="../manage/manageStudent.html">Quản lý học sinh</a></li>
                 <li><a href="../manage/manageTeacher.html">Quản lý giáo viên</a></li>
                 <li><a href="../manage/manageParent.html">Quản lý phụ huynh</a></li>
                 <li><a style="color: #0088cc;" href="../manage/manageFinance.html">Quản lý tài chính</a></li>
                 <li><a href="../manage/manageStatistical.php">Báo cáo thống kê</a></li>
                 <li><a href="../manage/manageCenter.html">Quản lý trung tâm</a></li>
-                <li><a href="../pages/home/home.php" style="display: flex;"><img src="../assets/images/icon-logout.png" alt="" style="width:20px"></a></li>
+                <li><a href="../pages/home/home.php" style="display: flex;"><img src="../assets/images/icon-logout.png"
+                            alt="" style="width:20px"></a></li>
             </ul>
         </nav>
     </header>
@@ -64,8 +39,8 @@ $jslistBill = json_encode($listBill);
         </div>
         <div id="nav-container-Tab2">
 
-            <a href="./manageFinance_wageTea.php" id="btn-tab-luongGV">Lương giáo viên</a>
-            <a href="./manageFinance_OtherFee.php" id="btn-tab-chiPhiKhac">Chi phí khác</a>
+            <a href="./manageFinance_wageTea.html" id="btn-tab-luongGV">Lương giáo viên</a>
+            <a href="./manageFinance_OtherFee.html" id="btn-tab-chiPhiKhac">Chi phí khác</a>
 
 
         </div>
@@ -73,29 +48,48 @@ $jslistBill = json_encode($listBill);
         <div id="Tab1" class="tabcontent">
             <h1>Chi phí khác</h1>
             <div class="search-container">
-                <form id="form-search" method="post" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" style="width: 45%; margin: unset;display: inline-flex;" autocomplete="off">
-                    <input type="text" name="keyword" id="keyword" placeholder="Tìm kiếm..." style="width: 70% ; border-radius: 0px; border-color:black;" value="" oninput="searchList()">
+                <form id="form-search" method="post" action="" style="width: 45%; margin: unset;display: inline-flex;"
+                    autocomplete="off">
+                    <input type="text" name="keyword" id="keyword" placeholder="Tìm kiếm..."
+                        style="width: 70% ; border-radius: 0px; border-color:black;" value="" oninput="searchList()">
                     <input type="button" id="search" value="Tìm kiếm" style="width: 100px;  background-color: #4CAF50;">
-                    <button type="submit" id="refesh-btn" name="refesh" style=" background-color: currentcolor "> <img style="width: 30px;" src="../assets/images/Refresh-icon.png" alt=""></button>
+                    <button type="submit" id="refesh-btn" name="refesh" style=" background-color: currentcolor "> <img
+                            style="width: 30px;" src="../assets/images/Refresh-icon.png" alt=""></button>
                 </form>
                 <div style="display:inline-flex ;align-items: center;  text-align: center">
-                <h3 > Thời gian: </h3>
-				<input type="month" id="month-year" style="height: 30px;background-color: beige;margin-right: 20px;">    
-                
-                <h3 style="margin-right:5px;    width: 110px;">Loại hóa đơn:</h3>
-                    <select style=" border: groove;background-color: beige;font-size: 14px;padding:0; width:200px;height:40px" id="select-kind-bill">
+                    <h3> Thời gian: </h3>
+                    <input type="month" id="month-year"
+                        style="height: 30px;background-color: beige;margin-right: 20px;">
+
+                    <div style="    display: flex;align-items: center;">
+                        <h3 style="margin-right:5px;      margin-left: 20px;  ">Cơ sở:</h3>
+                        <select
+                            style=" margin-right: 20px; border: groove;background-color: beige;font-size: 14px;padding:0; width:200px;height:40px"
+                            id="select-center">
+                            <option value="">...</option>
+                            <option value="0">Chung</option>
+
+                        </select>
+                    </div>
+
+                    <h3 style="margin-right:5px;    width: 110px;">Loại hóa đơn:</h3>
+                    <select
+                        style=" border: groove;background-color: beige;font-size: 14px;padding:0; width:200px;height:40px"
+                        id="select-kind-bill">
                         <option value="">...</option>
-                        <option value="Tiền điện">Tiền điện</option>
-                        <option value="Tiền nước">Tiền nước</option>
-                        <option value="Khác">Khác</option>
+                        <option value="3">Tiền điện</option>
+                        <option value="4">Tiền nước</option>
+                        <option value="5">Khác</option>
                     </select>
                 </div>
                 <div style="    display: flex;align-items: center;">
                     <h3 style="margin-right:5px;      margin-left: 20px;  ">Trạng thái:</h3>
-                    <select style="     margin-right: 20px; border: groove;background-color: beige;font-size: 14px;padding:0; width:200px;height:40px" id="select-status">
+                    <select
+                        style="     margin-right: 20px; border: groove;background-color: beige;font-size: 14px;padding:0; width:200px;height:40px"
+                        id="select-status">
                         <option value="">...</option>
-                        <option value="Chưa thanh toán">Chưa thanh toán</option>
-                        <option value="Đã thanh toán">Đã thanh toán</option>
+                        <option value="1">Chưa thanh toán</option>
+                        <option value="2">Đã thanh toán</option>
                     </select>
                 </div>
                 <div>
@@ -108,24 +102,25 @@ $jslistBill = json_encode($listBill);
 
             <div>
                 <table id="table-1">
-                    
+
                     <thead id="thead-1">
                         <tr>
-                            <th data-column="0" style="width:20px" >STT</th>
+                            <th data-column="0" style="width:20px">STT</th>
                             <th data-column="1" onclick="sortTable(1)">Mã hóa đơn</th>
                             <th data-column="2" onclick="sortTable(2)">Tên hóa đơn</th>
                             <th data-column="3" onclick="sortTable(3)">Loại hóa đơn</th>
                             <th data-column="4" onclick="sortTable(4)">Thời gian</th>
-                            <th data-column="5" onclick="sortTable(5)">Số tiền</th>
-                            <th data-column="6" onclick="sortTable(6)">Thời gian thanh toán</th>
-                            <th data-column="7" onclick="sortTable(7)">Trạng thái</th>
+                            <th data-column="3" onclick="sortTable(5)">Cơ sở</th>
+                            <th data-column="5" onclick="sortTable(6)">Số tiền</th>
+                            <th data-column="6" onclick="sortTable(7)">Thời gian thanh toán</th>
+                            <th data-column="7" onclick="sortTable(8)">Trạng thái</th>
                         </tr>
                     </thead>
                     <tbody class="tbody-1">
                     </tbody>
                     <tbody class="tbody-5">
                     </tbody>
-                    
+
                 </table>
                 <div id="container-index"></div>
             </div>
@@ -143,25 +138,39 @@ $jslistBill = json_encode($listBill);
                                 <tbody style="max-height:fit-content; overflow:unset">
                                     <tr>
                                         <td>
-                                            <label for="bill-name-add">Tên hóa đơn : <label id="lb-name-add" style="color:red; font-size:13px ; font-style: italic "></label></label>
-                                            <input type="text" id="bill-name-add" name="bill-name-add" placeholder="Nhập tên hóa đơn">
+                                            <label for="bill-name-add">Tên hóa đơn : <label id="lb-name-add"
+                                                    style="color:red; font-size:13px ; font-style: italic "></label></label>
+                                            <input type="text" id="bill-name-add" name="bill-name-add"
+                                                placeholder="Nhập tên hóa đơn">
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <label for="bill-kind-add">Loại hóa đơn: <label id="lb-kind-add" style="color:red; font-size:13px ; font-style: italic "></label></label>
+                                            <label for="bill-kind-add">Loại hóa đơn: <label id="lb-kind-add"
+                                                    style="color:red; font-size:13px ; font-style: italic "></label></label>
                                             <br>
                                             <select name="bill-kind-add" id="bill-kind-add" style="width: 50%;">
                                                 <option value="">Chọn loại hóa đơn</option>
-                                                <option value="Tiền điện">Tiền điện</option>
-                                                <option value="Tiền nước">Tiền nước</option>
-                                                <option value="Khác">Khác</option>
+                                                <option value="3">Tiền điện</option>
+                                                <option value="4">Tiền nước</option>
+                                                <option value="5">Khác</option>
+                                            </select>
+                                        </td>
+
+                                        <td>
+                                            <label for="bill-center-add">Trung tâm: <label id="lb-center-add"
+                                                    style="color:red; font-size:13px ; font-style: italic "></label></label>
+                                            <br>
+                                            <select name="bill-center-add" id="bill-center-add" style="width: 90%;">
+                                                <option value="">Chọn trung tâm</option>
+
                                             </select>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <label>Thời gian : <label id="lb-time-add" style="color:red; font-size:13px ; font-style: italic "></label></label>
+                                            <label>Thời gian : <label id="lb-time-add"
+                                                    style="color:red; font-size:13px ; font-style: italic "></label></label>
                                             <br>
                                             <label style="margin-left: 100px" for="bill-month-add">Tháng :</label>
                                             <select style="width:fit-content" name="bill-month-add" id="bill-month-add">
@@ -184,36 +193,36 @@ $jslistBill = json_encode($listBill);
                                             <select style="width:fit-content" name="bill-year-add" id="bill-year-add">
 
                                                 <option value="">Chọn năm</option>
-                                                <?php for ($i = 2020; $i <= 2100; $i++) { ?>
-                                                    <option value="<?php echo $i ?>">
-                                                        <?php echo $i ?>
-                                                    </option>
-                                                <?php } ?>
+
                                             </select>
                                         </td>
                                     </tr>
                                     <br>
                                     <td>
-                                        <label for="money-add-bill">Số tiền : <label id="lb-money-add" style="color:red; font-size:13px ; font-style: italic "></label></label>
+                                        <label for="money-add-bill">Số tiền : <label id="lb-money-add"
+                                                style="color:red; font-size:13px ; font-style: italic "></label></label>
                                         <br>
-                                        <input type="text" style="width: 80%;" id="money-add-bill" name="money-add-bill" pattern="[0-9,]+" oninput="formatNumber(this)" placeholder="Nhập số tiền">
+                                        <input type="text" style="width: 80%;" id="money-add-bill" name="money-add-bill"
+                                            pattern="[0-9,]+" oninput="formatNumber(this)" placeholder="Nhập số tiền">
                                     </td>
                                     <td>
-                                        <label for="bill-status-add">Trạng thái : <label id="lb-kind-add" style="color:red; font-size:13px ; font-style: italic "></label></label>
+                                        <!-- <label for="bill-status-add">Trạng thái : <label id="lb-kind-add" style="color:red; font-size:13px ; font-style: italic "></label></label>
 
                                         <select name="bill-status-add" id="bill-status-add" style="width: 50%;">
 
-                                            <option value="Chưa thanh toán">Chưa thanh toán</option>
-                                            <option value="Đã thanh toán">Đã thanh toán</option>
+                                            <option value="1">Chưa thanh toán</option>
+                                            <option value="2">Đã thanh toán</option>
 
-                                        </select>
+                                        </select> -->
                                     </td>
                                     <tr>
                                         <td>
-                                            <button style="background-color: teal;" id="reset-1" type="reset">Làm mới</button>
+                                            <button style="background-color: teal;" id="reset-1" type="reset">Làm
+                                                mới</button>
                                         </td>
                                         <td>
-                                            <input style="font-size: 14px; padding: 15px 35px; background-color: teal" type="submit" id="sumit-bill-add" value="Tạo">
+                                            <input style="font-size: 14px; padding: 15px 35px; background-color: teal"
+                                                type="submit" id="sumit-bill-add" value="Tạo">
                                         </td>
                                     </tr>
 
@@ -245,7 +254,8 @@ $jslistBill = json_encode($listBill);
                 <div id="tab-3-1" class="tabcontent-3">
                     <h2>Thông tin chi tiết hóa đơn</h2>
                     <button id="edit-button" style="position: absolute;top: 75px;right: 60px;">Sửa</button>
-                    <button id="btn-delete-bill" style="position: absolute;top: 75px;right: 11px; background-color: #e90000">Xóa</button>
+                    <button id="btn-delete-bill"
+                        style="position: absolute;top: 75px;right: 11px; background-color: #e90000">Xóa</button>
 
                     <div class="container">
 
@@ -277,6 +287,12 @@ $jslistBill = json_encode($listBill);
                                     </tr>
 
                                     <tr>
+                                        <th class="lb-detail-bill">Cơ sở :</th>
+                                        <td id="time-center-detail"></td>
+                                    </tr>
+
+
+                                    <tr>
                                         <th class="lb-detail-bill">Số tiền :</th>
                                         <td id="st-bill-detail"></td>
                                     </tr>
@@ -290,12 +306,13 @@ $jslistBill = json_encode($listBill);
                                         <!-- <td id="status-bill-detail"></td> -->
                                         <form action="" id='form-update-status' method="post">
                                             <td><select name="status-detail" id="status-detail" style="width: 50%;">
-                                                    <option style="color: green;" value="Đã thanh toán">Đã thanh toán</option>
-                                                    <option style="color: red;" value="Chưa thanh toán">Chưa thanh toán</option>
+                                                    <option style="color: green;" value="2">Đã thanh toán</option>
+                                                    <option style="color: red;" value="1">Chưa thanh toán</option>
 
                                                 </select>
                                                 <input type="hidden" id="id-fee" name="id-fee">
-                                                <input type="submit" id="update-tt" name='update-tt' value="Cập nhật" style="margin-left:100px">
+                                                <input type="submit" id="update-tt" name='update-tt' value="Cập nhật"
+                                                    style="margin-left:100px">
                                             </td>
 
                                         </form>
@@ -331,26 +348,42 @@ $jslistBill = json_encode($listBill);
 
                             <tr>
                                 <td>
-                                    <label for="bill-name-edit">Tên hóa đơn : <label id="lb-name-edit" style="color:red; font-size:13px ; font-style: italic "></label></label>
-                                    <br> <input type="text" id="bill-name-edit" name="bill-name-edit" placeholder="Nhập tên hóa đơn">
+                                    <label for="bill-name-edit">Tên hóa đơn : <label id="lb-name-edit"
+                                            style="color:red; font-size:13px ; font-style: italic "></label></label>
+                                    <br> <input type="text" id="bill-name-edit" name="bill-name-edit"
+                                        placeholder="Nhập tên hóa đơn">
 
                                 </td>
                             </tr>
                             <tr>
                                 <td>
-                                    <label for="bill-kind-edit">Loại hóa đơn: <label id="lb-kind-edit" style="color:red; font-size:13px ; font-style: italic "></label></label>
+                                    <label for="bill-kind-edit">Loại hóa đơn: <label id="lb-kind-edit"
+                                            style="color:red; font-size:13px ; font-style: italic "></label></label>
                                     <br>
                                     <select name="bill-kind-edit" id="bill-kind-edit" style="width: 50%;">
                                         <option value="">Chọn loại hóa đơn</option>
-                                        <option value="Tiền điện">Tiền điện</option>
-                                        <option value="Tiền nước">Tiền nước</option>
-                                        <option value="Khác">Khác</option>
+                                        <option value="3">Tiền điện</option>
+                                        <option value="4">Tiền nước</option>
+                                        <option value="5">Khác</option>
                                     </select>
                                 </td>
+
+                                <td>
+                                    <label for="bill-center-edit">Trung tâm: <label id="lb-center-edit"
+                                            style="color:red; font-size:13px ; font-style: italic "></label></label>
+                                    <br>
+                                    <select name="bill-center-edit" id="bill-center-edit" style="width: 90%;">
+                                        <option value="">Chọn trung tâm</option>
+
+                                    </select>
+                                </td>
+
+
                             </tr>
                             <tr>
                                 <td>
-                                    <label>Thời gian : <label id="lb-time-edit" style="color:red; font-size:13px ; font-style: italic "></label></label>
+                                    <label>Thời gian : <label id="lb-time-edit"
+                                            style="color:red; font-size:13px ; font-style: italic "></label></label>
                                     <br>
                                     <label style="margin-left: 100px" for="bill-month-edit">Tháng :</label>
                                     <select style="width:fit-content" name="bill-month-edit" id="bill-month-edit">
@@ -373,40 +406,42 @@ $jslistBill = json_encode($listBill);
                                     <select style="width:fit-content" name="bill-year-edit" id="bill-year-edit">
 
                                         <option value="">Chọn năm</option>
-                                        <?php for ($i = 2020; $i <= 2100; $i++) { ?>
-                                            <option value="<?php echo $i ?>">
-                                                <?php echo $i ?>
-                                            </option>
-                                        <?php } ?>
+
                                     </select>
 
                                 </td>
                             </tr>
                             <tr>
                                 <td>
-                                    <label for="money-edit-bill">Số tiền : <label id="lb-money-edit" style="color:red; font-size:13px ; font-style: italic "></label></label>
+                                    <label for="money-edit-bill">Số tiền : <label id="lb-money-edit"
+                                            style="color:red; font-size:13px ; font-style: italic "></label></label>
                                     <br>
-                                    <input type="text" style="width: 40%;" id="money-edit-bill" name="money-edit-bill" pattern="[0-9,]+" oninput="formatNumber(this)" placeholder="Nhập số tiền">
+                                    <input type="text" style="width: 40%;" id="money-edit-bill" name="money-edit-bill"
+                                        pattern="[0-9,]+" oninput="formatNumber(this)" placeholder="Nhập số tiền">
 
                                 </td>
                             </tr>
                             <tr>
                                 <td>
-                                    <label for="time-tt-edit-bill">Thời gian thanh toán : <label id="lb-time-tt-edit" style="color:red; font-size:13px ; font-style: italic "></label></label>
+                                    <label for="time-tt-edit-bill">Thời gian thanh toán : <label id="lb-time-tt-edit"
+                                            style="color:red; font-size:13px ; font-style: italic "></label></label>
                                     <br>
-                                    <input type="date" style="width: 30%; height:25px; font-size:16px; margin-left:20px; margin:8px 0 0 20px" id="time-tt-edit-bill" name="time-tt-edit-bill">
+                                    <input type="date"
+                                        style="width: 30%; height:25px; font-size:16px; margin-left:20px; margin:8px 0 0 20px"
+                                        id="time-tt-edit-bill" name="time-tt-edit-bill">
 
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>
-                                    <label for="bill-status-edit">Trạng thái : <label id="lb-kind-edit" style="color:red; font-size:13px ; font-style: italic "></label></label>
+                                    <label for="bill-status-edit">Trạng thái : <label id="lb-kind-edit"
+                                            style="color:red; font-size:13px ; font-style: italic "></label></label>
 
                                     <select name="bill-status-edit" id="bill-status-edit" style="width: 40%;">
 
-                                        <option value="Chưa thanh toán">Chưa thanh toán</option>
-                                        <option value="Đã thanh toán">Đã thanh toán</option>
+                                        <option value="1">Chưa thanh toán</option>
+                                        <option value="2">Đã thanh toán</option>
 
                                     </select>
                                 </td>
@@ -436,10 +471,12 @@ $jslistBill = json_encode($listBill);
                 <h4>Bạn chắc chắn muốn xóa?</h4>
                 <div style="display:flex ;justify-content: space-evenly;align-items: center">
 
-                    <button style="background-color:#52a95f; height: 44px;width: 80px" id="btn-cancle-delete-bill">Hủy bỏ</button>
+                    <button style="background-color:#52a95f; height: 44px;width: 80px" id="btn-cancle-delete-bill">Hủy
+                        bỏ</button>
                     <form id="form-delete-bill" action="" method="POST">
                         <input type="hidden" id="mahd-delete" name="mahd-delete">
-                        <input type="submit" style="background-color: #d52828;  height: 44px;width: 80px" id="delete-bill" name="delete=bill" value="Xóa"></input>
+                        <input type="submit" style="background-color: #d52828;  height: 44px;width: 80px"
+                            id="delete-bill" name="delete=bill" value="Xóa"></input>
                     </form>
                 </div>
             </div>
@@ -447,14 +484,17 @@ $jslistBill = json_encode($listBill);
             <div class="delete-bill-ques-2">
                 <img src="../assets/images/warning-icon.png" alt="" style=" width: 40px;">
                 <h4>Hóa đơn đã có dữ liệu thanh toán</h4>
-                <h4>Bạn chắc chắn muốn xóa?</h4>
+                <h4>Hãy kiểm tra lại lịch sử thanh toán để đảm bảo toàn vẹn dữ liệu</h4>
                 <div style="display:flex ;justify-content: space-evenly;align-items: center">
 
-                    <button style="background-color:#52a95f; height: 44px;width: 80px" id="btn-cancle-delete-bill-2">Hủy bỏ</button>
-                    <form id="form-delete-bill-2" action="" method="POST">
+                    <button style="background-color:#768699; height: 44px;width: 80px"
+                        id="btn-cancle-delete-bill-2">Đóng</button>
+
+                    <!-- <form id="form-delete-bill-2" action="" method="POST">
                         <input type="hidden" id="mahd-delete-2" name="mahd-delete-2">
-                        <input type="submit" style="background-color: #d52828;  height: 44px;width: 80px" id="delete-bill-2" name="delete=bill-2" value="Xóa"></input>
-                    </form>
+                        <input type="submit" style="background-color: #d52828;  height: 44px;width: 80px"
+                            id="delete-bill-2" name="delete=bill-2" value="Xóa"></input>
+                    </form> -->
                 </div>
             </div>
         </div>
@@ -468,6 +508,10 @@ $jslistBill = json_encode($listBill);
 
     </main>
 
+    <div id="loadingSpinner" class="spinner-overlay">
+        <div class="spinner"></div>
+    </div>
+
     <footer>
         <p>© 2023 Hệ thống quản lý giáo dục. All rights reserved.</p>
     </footer>
@@ -476,8 +520,10 @@ $jslistBill = json_encode($listBill);
 
 
 
+<script src="../../assets/js/api.js"></script>
+
 <script>
-    var dsHoaDon = <?php print_r($jslistBill); ?>;
+    // var dsHoaDon = <?php print_r($jslistBill); ?>;
 </script>
 
 <script src="../../assets/js/mangeFinance_OtherFee.js"></script>

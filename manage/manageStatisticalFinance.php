@@ -43,12 +43,12 @@ $jslistThuTheoNam = json_encode($listThuTheoNam);
         </div>
         <nav>
             <ul>
-                <li><a href="./ListClass.php">Quản lý lớp học</a></li>
+                <li><a href="./manageClass.html">Quản lý lớp học</a></li>
                 <li><a href="../manage/manageStudent.html">Quản lý học viên</a></li>
                 <li><a href="../manage/manageTeacher.html">Quản lý giáo viên</a></li>
                 <li><a href="../manage/manageParent.html">Quản lý phụ huynh</a></li>
                 <li><a href="../manage/manageFinance.html">Quản lý tài chính</a></li>
-                <li><a  style="color: #0088cc;"href="../manage/manageStatistical.php">Báo cáo thống kê</a></li>
+                <li><a style="color: #0088cc;" href="../manage/manageStatistical.php">Báo cáo thống kê</a></li>
                 <li><a href="../manage/manageCenter.html">Quản lý trung tâm</a></li>
                 <li><a href="../pages/home/home.php" style="display: flex;"><img src="../assets/images/icon-logout.png" alt="" style="width:20px"></a></li>
 
@@ -59,53 +59,73 @@ $jslistThuTheoNam = json_encode($listThuTheoNam);
         <div class="tab">
             <button class="tablinks" id='btn-tab1'>Thống kê tổng quan</button>
             <button class="tablinks" id='btn-tab2'>Thống kê tài chính</button>
-            
+
         </div>
 
         <div style="display: flex;flex-direction: column;" id="content">
             <div>
-                <select id="select-year-1" style="width:100px">
-                    <option value="">Chọn năm</option>
-                    <?php for ($i = 2020; $i <= 2100; $i++) { ?>
 
-                        <option value="<?php echo $i ?>" <?php if ($i == date("Y")) echo 'selected' ?>>
-                            <?php echo $i ?>
-                        </option>
-                    <?php } ?>
-                </select>
+
+                <div style="    display: flex;align-items: center;">
+                    <h4 style="margin-right:5px;      margin-left: 20px;  ">Cơ sở:</h4>
+                    <select
+                        style=" margin-right: 20px; border: groove;font-size: 14px;padding:0; width:300px;height:40px"
+                        id="select-center-1">
+                        <option value="">...</option>
+
+                    </select>
+
+                    <select id="select-year-1" style="width:100px">
+                        <option value="">Chọn năm</option>
+
+                    </select>
+                </div>
 
                 <canvas id="chart-1" style="max-height:700px ; max-width: 1500px"></canvas>
 
             </div>
             <div>
-                <select id="select-year-2" style="width:100px">
-                    <option value="">Chọn năm</option>
-                    <?php for ($i = 2020; $i <= 2100; $i++) { ?>
 
-                        <option value="<?php echo $i ?>" <?php if ($i == date("Y")) echo 'selected' ?>>
-                            <?php echo $i ?>
-                        </option>
-                    <?php } ?>
-                </select>
+                <div style="    display: flex;align-items: center;">
+                    <h4 style="margin-right:5px;      margin-left: 20px;  ">Cơ sở:</h4>
+                    <select
+                        style=" margin-right: 20px; border: groove;font-size: 14px;padding:0; width:300px;height:40px"
+                        id="select-center-2">
+                        <option value="">...</option>
 
+                    </select>
+                    <select id="select-year-2" style="width:100px">
+                        <option value="">Chọn năm</option>
+
+                    </select>
+                </div>
 
                 <div id="chart-2"></div>
                 <h3 style="margin-left:35%">Biểu đồ tổng doanh thu và tỉ lệ lợi nhuận </h3>
-            
+
             </div>
 
             <div style="margin-left: 30%;">
-                <select id="select-year-3" style="width:100px">
-                    <option value="">Chọn năm</option>
-                    <?php for ($i = 2020; $i <= 2100; $i++) { ?>
+                <div style="display: flex">
+                    <h4 style="margin-right:5px;      margin-left: 20px;  ">Cơ sở:</h4>
+                    <select
+                        style=" margin-right: 20px; border: groove;font-size: 14px;padding:0; width:300px;height:40px"
+                        id="select-center-3">
+                        <option value="">...</option>
 
-                        <option value="<?php echo $i ?>" <?php if ($i == date("Y")) echo 'selected' ?>>
-                            <?php echo $i ?>
-                        </option>
-                    <?php } ?>
-                </select>
-               
-                <canvas  id="chart-3" style="max-width:500px;max-height:500px"></canvas>
+                    </select>
+
+                    <div style="    display: flex;align-items: center;">
+                        <select id="select-year-3" style="width:100px">
+                            <option value="">Chọn năm</option>
+                        </select>
+                    </div>
+                </div>
+
+
+                <i id="chart-3-empty" style="display:none">Không có dữ liệu phù hợp theo yêu cầu</i>
+
+                <canvas id="chart-3" style="max-width:500px;max-height:500px"></canvas>
             </div>
 
         </div>
@@ -115,6 +135,10 @@ $jslistThuTheoNam = json_encode($listThuTheoNam);
 
 
     </main>
+    <!-- Spinner overlay -->
+    <div id="loadingSpinner" class="spinner-overlay">
+        <div class="spinner"></div>
+    </div>
 
 
     <footer>
@@ -132,7 +156,7 @@ $jslistThuTheoNam = json_encode($listThuTheoNam);
     var ds_Chi = <?php print_r($jslistChiTheoNam); ?>;
 </script>
 
-
+<script src="../../assets/js/api.js"></script>
 
 <script src="../../assets/js/manageStatisticalFinance.js"></script>
 

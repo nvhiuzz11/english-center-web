@@ -8,7 +8,22 @@ var countData;
 var currentPage = 1;
 var ds_hocsinh;
 var ds_phuhuynh;
+var listCenter;
+
 const accessToken = localStorage.getItem("accessToken");
+
+const store_ds_hocsinh = localStorage.getItem("ds_hocsinh");
+const store_ds_phuhuynh = localStorage.getItem("ds_phuhuynh");
+
+if (store_ds_hocsinh) {
+  ds_hocsinh = JSON.parse(store_ds_hocsinh);
+}
+if (store_ds_phuhuynh) {
+  ds_phuhuynh = JSON.parse(store_ds_phuhuynh);
+  showTableParent(ds_phuhuynh, "");
+}
+
+listCenter = JSON.parse(localStorage.getItem("listCenter"));
 
 fetchStudent();
 fetchParent();
@@ -35,6 +50,7 @@ async function fetchStudent() {
       const resData = await res.json();
       console.log("ds_hocsinh", resData.docs);
       ds_hocsinh = resData.docs;
+      localStorage.setItem("ds_hocsinh", JSON.stringify(ds_hocsinh));
     }
   } catch (error) {
     hideSpinner();
@@ -43,7 +59,9 @@ async function fetchStudent() {
 }
 
 async function fetchParent() {
-  showSpinner();
+  if (!ds_phuhuynh) {
+    showSpinner();
+  }
   try {
     const res = await fetch(`${API_URL}/api/parents`, {
       method: "GET",
@@ -58,6 +76,8 @@ async function fetchParent() {
 
       ds_phuhuynh = resData.docs;
       console.log("ds_phuhuynh", ds_phuhuynh);
+      localStorage.setItem("ds_phuhuynh", JSON.stringify(ds_phuhuynh));
+
       countData = ds_phuhuynh.length;
       showTableParent(ds_phuhuynh, "");
       hideSpinner();
@@ -66,6 +86,54 @@ async function fetchParent() {
     hideSpinner();
     console.log("fetchStudent error", error);
   }
+}
+
+fetchCenter();
+
+async function fetchCenter() {
+  fetch(`${API_URL}/api/centers?includeClass=true`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      listCenter = data.docs;
+
+      var select1 = document.getElementById("select-center");
+      var select2 = document.getElementById("bill-center-add");
+      var select3 = document.getElementById("bill-center-edit");
+
+      listCenter.forEach((center) => {
+        const option = document.createElement("option");
+        option.value = center.id;
+        option.text = `Cơ sở ${center.id}: ${center.name}`;
+
+        select1.appendChild(option);
+      });
+
+      listCenter.forEach((center) => {
+        const option = document.createElement("option");
+        option.value = center.id;
+        option.text = `Cơ sở ${center.id}: ${center.name}`;
+
+        select2.appendChild(option);
+      });
+
+      listCenter.forEach((center) => {
+        const option = document.createElement("option");
+        option.value = center.id;
+        option.text = `Cơ sở ${center.id}: ${center.name}`;
+
+        select3.appendChild(option);
+      });
+
+      localStorage.setItem("listCenter", JSON.stringify(listCenter));
+    })
+    .catch((error) => {
+      console.log("Error:", error);
+    });
 }
 
 function formatMoney(number) {
@@ -97,6 +165,14 @@ function convertDateFormat(dateString) {
 
 function numberWithCommas(x) {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function getCenterNameById(id) {
+  if (!listCenter) return "";
+  else {
+    const center = listCenter.find((center) => center.id === id);
+    return center ? center.name : "";
+  }
 }
 
 function getGender(gender) {
@@ -278,18 +354,19 @@ document.querySelector(".tbody-1").addEventListener("click", function (event) {
     document.getElementById("tb3").classList.remove("active");
 
     //thong tin tai khoan
+    document.getElementById("name-login").textContent =
+      parent_select.user.userName;
+    document.getElementById("username-login").value =
+      parent_select.user.userName;
+    document.getElementById("date_logup").textContent =
+      "Ngày đăng ký  :  " + formatDateFromISO(parent_select.createdAt);
+    // document.getElementById("name-login").textContent =
+    //   parent_select.user.userName;
+    // document.getElementById("username-login").value =
+    //   parent_select.user.userName;
+    // document.getElementById("date_logup").textContent =
+    //   "Ngày đăng ký  :  " + formatDateFromISO(parent_select.createdAt);
 
-    // for (var i = 0; i < ds_tk_ph.length; i++) {
-    //   if (ds_tk_ph[i].MaPH === parent_select.MaPH) {
-    //     document.getElementById("name-login").textContent =
-    //       ds_tk_ph[i]["UserName"];
-    //     document.getElementById("username-login").value =
-    //       ds_tk_ph[i]["UserName"];
-    //     document.getElementById("password").value = ds_tk_ph[i]["Password"];
-    //     document.getElementById("date_logup").textContent =
-    //       "Ngày đăng ký  :  " + convertDateFormat(ds_tk_ph[i]["NgayDK"]);
-    //   }
-    // }
     showStudent();
 
     modalBg.style.display = "block";
@@ -373,8 +450,7 @@ function showStudent() {
         "</tr>" +
         "<tr>" +
         "<td>" +
-        "<p ><strong> Lớp học :</strong>" +
-        " 	  ";
+        "<p ><strong> Lớp học :</strong></td><td>";
 
       var k = true;
 
@@ -385,14 +461,17 @@ function showStudent() {
         html += "(Chưa tham gia lớp học nào)";
       } else {
         classes.forEach((classs) => {
-          html += classs.code + " ;  ";
+          html += `${classs.code} (Cở sở: ${getCenterNameById(
+            classs?.centerId
+          )}) `;
         });
       }
+      html += "</td>";
 
       // for (var j = 0; j < ds_hs_lop.length; j++) {
       //   if (ds_hs_lop[j].MaHS === child[i]["MaHS"]) {
       //
-      //     k = false;
+      //     k = false;s
       //   }
       // }
       // if (k) {
@@ -831,70 +910,70 @@ document.getElementById("change-pass-btn").addEventListener("click", () => {
   document.getElementById("div-change-pass").style.display = "block";
 });
 
-document.getElementById("change").addEventListener("click", function (event) {
-  event.preventDefault();
+document
+  .getElementById("change")
+  .addEventListener("click", async function (event) {
+    event.preventDefault();
 
-  var pass = document.getElementById("new-password").value;
-  var username = document.getElementById("username-login").value;
+    var pass = document.getElementById("new-password").value;
+    var username = document.getElementById("username-login").value;
 
-  var err_pass = "";
-  var err_username = "";
-  var check = true;
+    var err_pass = "";
+    var err_username = "";
+    var check = true;
 
-  if (!pass) {
-    err_pass = "*Bạn chưa nhập mật khẩu";
-    check = false;
-  }
-  if (!username) {
-    err_username = "*Bạn chưa nhập tên tài khoản";
-    check = false;
-  }
+    if (!pass) {
+      err_pass = "*Bạn chưa nhập mật khẩu";
+      check = false;
+    } else if (pass.length < 8) {
+      err_pass = "*Mật khẩu cần ít nhất 8 ký tự";
+      check = false;
+    }
+    // if (!username) {
+    //   err_username = "*Bạn chưa nhập tên tài khoản";
+    //   check = false;
+    // }
+    document.getElementById("err-pass").textContent = err_pass;
+    document.getElementById("err-username").textContent = err_username;
 
-  document.getElementById("err-pass").textContent = err_pass;
-  document.getElementById("err-username").textContent = err_username;
+    if (!check) {
+      return;
+    }
 
-  if (!check) {
-    return;
-  }
-
-  $.ajax({
-    url: "../api/changeAccParent.php",
-    type: "POST",
-    data: {
-      id: parent_select.MaPH,
-      username: username,
-      pass: pass,
-    },
-    success: function (res) {
-      ds_tk_ph = JSON.parse(res);
-
-      for (var i = 0; i < ds_tk_ph.length; i++) {
-        if (ds_tk_ph[i].MaPH === parent_select.MaPH) {
-          document.getElementById("name-login").textContent =
-            ds_tk_ph[i]["UserName"];
-          document.getElementById("username-login").value =
-            ds_tk_ph[i]["UserName"];
-          document.getElementById("password").value = ds_tk_ph[i]["Password"];
-          document.getElementById("date_logup").textContent =
-            "Ngày đăng ký  :  " + convertDateFormat(ds_tk_ph[i]["NgayDK"]);
-          break;
+    showSpinner();
+    try {
+      const response = await fetch(
+        `${API_URL}/api/user-password-by-admin/${parent_select.userId}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            password: pass,
+          }),
         }
+      );
+
+      if (response.status === 200) {
+        hideSpinner();
+
+        document.getElementById("new-password").value = "";
+        document.getElementById("div-change-pass").style.display = "none";
+        document.querySelector(".change-pass-success").style.display = "block";
+
+        setTimeout(function () {
+          document.querySelector(".change-pass-success").style.display = "none";
+          document.getElementById("err-pass").textContent = "";
+          document.getElementById("err-username").textContent = "";
+        }, 1000);
       }
-    },
-    error: function (xhr, status, error) {
-      console.error(error);
-    },
+    } catch (error) {
+      console.error("api error", error);
+      hideSpinner();
+    }
   });
-
-  document.getElementById("div-change-pass").style.display = "none";
-  document.querySelector(".change-pass-success").style.display = "block";
-
-  setTimeout(function () {
-    document.querySelector(".change-pass-success").style.display = "none";
-    document.getElementById("err-pass").textContent = "";
-    document.getElementById("err-username").textContent = "";
-  }, 1000);
-});
 
 document.getElementById("cancle-change-pass").addEventListener("click", () => {
   document.getElementById("div-change-pass").style.display = "none";

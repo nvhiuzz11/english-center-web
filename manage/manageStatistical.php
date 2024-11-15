@@ -64,7 +64,7 @@ $jslistCountClass = json_encode($listCountClass);
         </div>
         <nav>
             <ul>
-                <li><a href="./ListClass.php">Quản lý lớp học</a></li>
+                <li><a href="./manageClass.html">Quản lý lớp học</a></li>
                 <li><a href="../manage/manageStudent.html">Quản lý học viên</a></li>
                 <li><a href="../manage/manageTeacher.html">Quản lý giáo viên</a></li>
                 <li><a href="../manage/manageParent.html">Quản lý phụ huynh</a></li>
@@ -80,11 +80,22 @@ $jslistCountClass = json_encode($listCountClass);
         <div class="tab">
             <button class="tablinks" id='btn-tab1'>Thống kê tổng quan</button>
             <button class="tablinks" id='btn-tab2'>Thống kê tài chính</button>
-           
+
         </div>
 
         <div style="display: flex;flex-direction: column;" id="content">
             <h2>Tổng quan người dùng:</h2>
+
+            <div style="    display: flex;align-items: center;">
+                <h4 style="margin-right:5px;      margin-left: 20px;  ">Cơ sở:</h4>
+                <select
+                    style=" margin-right: 20px; border: groove;font-size: 14px;padding:0; width:300px;height:40px"
+                    id="select-center-1">
+                    <option value="">...</option>
+
+                </select>
+            </div>
+
             <div id='div-user' style="display: flex;">
                 <div id="countUserChart">
                     <h3>Số lượng người dùng : </h3>
@@ -95,62 +106,105 @@ $jslistCountClass = json_encode($listCountClass);
                     <div id="countPHlkChart"></div>
                 </div>
 
+
+
             </div>
             <h2>Lớp học :</h2>
             <div id="div-class">
                 <div style="position:relative ">
                     <div style="width: 100%">
-                        <select id="select-year" style="width:100px">
-                            <option value="">Chọn năm</option>
-                            <?php for ($i = 2020; $i <= 2100; $i++) { ?>
+
+                        <div style="    display: flex;align-items: center;">
+                            <h4 style="margin-right:5px;      margin-left: 20px;  ">Cơ sở:</h4>
+                            <select
+                                style=" margin-right: 20px; border: groove;font-size: 14px;padding:0; width:300px;height:40px"
+                                id="select-center-5">
+                                <option value="">...</option>
+
+                            </select>
+                            <select id="select-year" style="width:100px">
+                                <option value="">Chọn năm</option>
+                                <!-- <?php for ($i = 2020; $i <= 2100; $i++) { ?>
 
                                 <option value="<?php echo $i ?>" <?php if ($i == date("Y")) echo 'selected' ?>>
                                     <?php echo $i ?>
                                 </option>
-                            <?php } ?>
-                        </select>
+                            <?php } ?> -->
+                            </select>
+                        </div>
+
+
 
                         <canvas id='classActiveChart'> </canvas>
                     </div>
                     <div style="position:absolute; right: 100px; top:270px">
-                            <div id = "class-detail"></div>
+                        <div id="class-detail"></div>
                     </div>
 
                 </div>
             </div>
             <h2>Học viên :</h2>
             <div id="Student">
+                <div style="    display: flex;align-items: center;">
+                    <h4 style="margin-right:5px;      margin-left: 20px;  ">Cơ sở:</h4>
+                    <select
+                        style=" margin-right: 20px; border: groove;font-size: 14px;padding:0; width:300px;height:40px"
+                        id="select-center-2">
+                        <option value="">...</option>
+
+                    </select>
+                </div>
                 <h3 id="total-student"></h3>
                 <div style="display:flex">
-                    <canvas style="max-width:400px; max-height:400px; margin-left:100px " id="genderChart"></canvas>
+                    <!-- <canvas style="max-width:400px; max-height:400px; margin-left:100px " id="genderChart"></canvas> -->
 
                     <div style="width:50%;margin-left: 250px;">
+
                         <canvas id="ageChart"></canvas>
                     </div>
                 </div>
 
                 <div>
-                    <select id="select-year-hs" style="width:100px">
-                        <option value="">Chọn năm</option>
-                        <?php for ($i = 2020; $i <= 2100; $i++) { ?>
 
-                            <option value="<?php echo $i ?>" <?php if ($i == date("Y")) echo 'selected' ?>>
-                                <?php echo $i ?>
-                            </option>
-                        <?php } ?>
-                    </select>
+                    <div style="    display: flex;align-items: center;">
+
+
+                        <h4 style="margin-right:5px;      margin-left: 20px;  ">Cơ sở:</h4>
+                        <select
+                            style=" margin-right: 20px; border: groove;font-size: 14px;padding:0; width:300px;height:40px"
+                            id="select-center-3">
+                            <option value="">...</option>
+
+                        </select>
+
+                        <select id="select-year-hs" style="width:100px">
+                            <option value="">Chọn năm</option>
+
+                        </select>
+                    </div>
                     <canvas id="studentChart" style="max-height:500px"></canvas>
+
                 </div>
 
-                <div style="display:inline-flex">
-                    <div style="width:40%">
-                        <div  style="max-width:500px; max-height:500px;margin-left:150px " id="absentChart">
+                <!-- <div style="display:inline-flex"> -->
+                <div>
+                    <div style="    display: flex;align-items: center;">
 
-                        </div>
-                        <h3 style="margin-left:200px">Tỷ lệ học sinh tham gia buổi học</h3>
+                        <h4 style="margin-right:5px;      margin-left: 20px;  ">Cơ sở:</h4>
+                        <select
+                            style=" margin-right: 20px; border: groove;font-size: 14px;padding:0; width: 300px;height:40px"
+                            id="select-center-4">
+                            <option value="">...</option>
+
+                        </select>
                     </div>
-                    <div style="width:40%;margin-left:200px;">
-                    <h3 style="margin-left:150px" >Danh sách học sinh nghỉ học nhiều</h3>
+                    <div style="max-width:500px; max-height:500px;margin-left:150px " id="absentChart">
+
+                    </div>
+                    <h3 style="margin-left:200px">Tỷ lệ học sinh tham gia buổi học</h3>
+                </div>
+                <!-- <div style="width:40%;margin-left:200px;">
+                        <h3 style="margin-left:150px">Danh sách học sinh nghỉ học nhiều</h3>
                         <table>
                             <thead>
                                 <th>Mã học viên</th>
@@ -158,11 +212,11 @@ $jslistCountClass = json_encode($listCountClass);
                                 <th>Lớp</th>
                                 <th>Số buổi</th>
                             </thead>
-                                
+
                             <tbody style="max-height: 300px;overflow-y: auto; ">
                                 <?php foreach ($listHSAbsent as $student) : ?>
-                                    <tr> 
-                                       
+                                    <tr>
+
                                         <td><?php echo $student['MaHS']; ?></td>
                                         <td><?php echo $student['TenHS']; ?></td>
                                         <td><?php echo $student['MaLop']; ?></td>
@@ -171,9 +225,9 @@ $jslistCountClass = json_encode($listCountClass);
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
-                    </div>
+                    </div> -->
 
-                </div>
+                <!-- </div> -->
             </div>
 
             <div></div>
@@ -183,13 +237,21 @@ $jslistCountClass = json_encode($listCountClass);
     </main>
 
 
+    <!-- Spinner overlay -->
+    <div id="loadingSpinner" class="spinner-overlay">
+        <div class="spinner"></div>
+    </div>
+
+
     <footer>
         <p>© 2023 Hệ thống quản lý giáo dục. All rights reserved.</p>
     </footer>
+
 </body>
 
 
 
+<script src="../../assets/js/api.js"></script>
 <script>
     var countUser = <?php print_r($jslistCountUser); ?>;
     var countHSlk = <?php print_r($jslistCountHSlk); ?>;
@@ -203,8 +265,6 @@ $jslistCountClass = json_encode($listCountClass);
     var ds_HSTang = <?php print_r($jslistHSTangTheoThang); ?>;
     var ds_HSDD = <?php print_r($jslistCountHSDD); ?>;
     var ds_tongLop = <?php print_r($jslistCountClass); ?>;
-
-  
 </script>
 
 

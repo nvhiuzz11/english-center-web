@@ -3,6 +3,7 @@
     background-color: #797979cc;
     font-size: 18px;
     color: #fff;
+    text-align: center;
 }
 
 .class-code1 {
@@ -10,6 +11,7 @@
     background-color: chartreuse;
     font-size: 18px;
     color: #fff;
+    text-align: center;
 }
 
 .class-code2 {
@@ -17,6 +19,7 @@
     background-color: red;
     font-size: 18px;
     color: #fff;
+    text-align: center;
 }
 
 .class-codeOff {
@@ -24,6 +27,7 @@
     background-color: #ccc;
     font-size: 18px;
     color: #fff;
+    text-align: center;
 }
 
 .class-container a {
@@ -630,4 +634,215 @@ input[type='submit']:hover {
     border-radius: 5px;
     background-color: orangered;
     width: 70px;
+}
+.classList-item-container {
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    overflow: hidden;
+    min-width: 300px;
+}
+.detail-class-list {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 16px;
+}
+
+.detail-class-list > button {
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: #fff;
+    font-weight: 700;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+}
+.classes-container-v2{
+    justify-content: start;
+    gap: 80px;
+}
+.col-md-6 input {
+    padding: 12px; 
+    outline: none; 
+    border: 1px solid #ccc;
+}
+.flex {
+    display: flex;
+
+}
+
+.detai_container{
+    padding: 36px 48px;
+    width: 100%;
+    min-height: 650px;
+}
+.detail_wrap {
+    background-color: #fff;
+    border-radius: 24px;
+    border: #ccc solid 1px;
+    padding: 24px 0px;
+}
+.detail_row_container{
+    display: flex;
+    justify-content: start;
+    width: 100%;
+    padding: 12px;
+    gap: 12px;
+    margin-left: 24px;
+}
+.detail_row_el{
+    width: 50%;
+    display: flex;
+
+}
+.detai_row_el_label {
+    min-width: 250px;
+    font-weight: 700;
+    font-size: 18px;
+}
+.action_detail_wrap{
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+}
+.delete_detail_class_btn {
+    background-color: #e47272;
+    color: #fff;
+    font-weight: 700;
+    font-size: 18px;
+    cursor: pointer;
+    border: none;
+    border-radius: 18px;
+    padding: 12px 32px;
+}
+.edit_detail_class_btn {
+    background-color: #90b193;
+    color: #fff;
+    font-weight: 700;
+    font-size: 18px;
+    cursor: pointer;
+    border: none;
+    border-radius: 18px;
+    padding: 12px 32px;
+}
+.student-add-to-class-btn {
+    padding: 12px 18px;
+    border-radius: 12px;
+    border: none;
+    background-color: #4CAF50;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    margin-top: 18px;
+}
+#select-student-add-list {
+    margin-top: 32px;
+}
+#box-addStudent {
+    height: 250px;
+}
+#overlay-edit-program {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+#overlay-edit-program.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+#box-edit-program {
+    opacity: 0;
+    transform: scale(1.5);
+    transition: opacity 0.3s, transform 0.3s;
+    background-color: #ffffff;
+    width: 50%;
+    height: 300px;
+    overflow: auto;
+    padding: 0px 30px;
+    border-radius: 5px;
+}
+
+#box-edit-program.active {
+    opacity: 1;
+    transform: scale(1);
+}
+
+#box-edit-program #close-btn-edit-program {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: none;
+    border: none;
+    font-size: 50px;
+    cursor: pointer;
+    color: #0088cc;
+}
+#update-class-btn {
+    border-radius: 18px;
+    background-color: #4CAF50;
+    padding: 16px 28px;
+    color: #fff;
+    border: none;
+    font-weight: 700;
+}
+.medium-dialog{
+    z-index: 10000;
+}
+.create-dialog-wrap{ 
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0,0,0, 0.2);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+.program-btn-create {
+    padding: 12px 24px;
+    width: 100%;
+    margin-top: 12px;
+    color: #fff;
+    background-color: #4CAF50;
+    font-weight: 700;
+    border-radius: 8px;
+    border: none;
+}
+.schedule-btn-create {
+    padding: 12px 24px;
+    width: 100%;
+    margin-top: 12px;
+    color: #fff;
+    background-color: #4CAF50;
+    font-weight: 700;
+    border-radius: 8px;
+    border: none;
+}
+.open-create-dialog {
+    display: flex;
+}
+.page-create-dialog-inner {
+    min-width: 500px;
+    padding: 32px;
+    background-color: #fff;
+    border-radius: 16px;
+}
+.page-create-dialog-inner input {
+    width: 100%;
+    padding: 6px 12px;
 }

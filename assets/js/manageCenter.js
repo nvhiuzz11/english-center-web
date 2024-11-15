@@ -3,11 +3,18 @@ var countData;
 var currentPage = 1;
 var collum = "";
 var orderby = "";
-fetchTable();
 
 const accessToken = localStorage.getItem("accessToken");
 console.log("assetToken", localStorage.getItem("accessToken"));
-console.log("refreshToken", localStorage.getItem("refreshToken"));
+
+const store_listCenter = localStorage.getItem("listCenter");
+if (store_listCenter) {
+  listCenter = JSON.parse(store_listCenter);
+  console.log("store_listCenter", listCenter);
+  showTable(listCenter, "", currentPage);
+}
+
+fetchTable();
 
 function formatDateFromISO(isoString) {
   const date = new Date(isoString);
@@ -42,8 +49,10 @@ function numberWithCommas(x) {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-async function fetchTable(params) {
-  showSpinner();
+async function fetchTable() {
+  if (!listCenter) {
+    showSpinner();
+  }
 
   fetch(`${API_URL}/api/centers?includeClass=true`, {
     method: "GET",
@@ -55,6 +64,9 @@ async function fetchTable(params) {
     .then((data) => {
       console.log("Protected data:", data);
       listCenter = data.docs;
+
+      localStorage.setItem("listCenter", JSON.stringify(listCenter));
+
       countData = data.pages;
       currentPage = 1;
       showTable(listCenter, "", currentPage);
@@ -478,40 +490,48 @@ submit_update.addEventListener("click", async function (event) {
 
 // Khi nhan nut Xoa
 
-function deleteParent() {
-  $.ajax({
-    url: "../api/deleteParent.php",
-    type: "POST",
-    data: {
-      id: parent_select.MaPH,
-    },
-    success: function (res) {
-      listCenter = JSON.parse(res);
-      var text = document.getElementById("keyword").value;
-      showTableParent(text, currentPage, collum, orderby);
-    },
-    error: function (xhr, status, error) {
-      console.error(error);
-    },
-  });
+async function deleteCenter() {
+  // $.ajax({
+  //   url: "../api/deleteParent.php",
+  //   type: "POST",
+  //   data: {
+  //     id: parent_select.MaPH,
+  //   },
+  //   success: function (res) {
+  //     listCenter = JSON.parse(res);
+  //     var text = document.getElementById("keyword").value;
+  //     showTableParent(text, currentPage, collum, orderby);
+  //   },
+  //   error: function (xhr, status, error) {
+  //     console.error(error);
+  //   },
+  // });
 
-  //
-  document.querySelector(".delete-ques2").style.display = "none";
-  document.querySelector(".delete-ques").style.display = "none";
-  document.getElementById("modal-ques").style.display = "none";
+  showSpinner();
+  try {
+    const response = await fetch(`${API_URL}/api/center/${center_select.id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    });
 
-  document.getElementById("div-change-pass").style.display = "none";
-  modalBg.style.display = "none";
-  const paragraphs = document.getElementsByTagName("p");
-  while (paragraphs.length > 0) {
-    paragraphs[0].parentNode.removeChild(paragraphs[0]);
+    if (response.status === 200) {
+      await fetchTable();
+      searchList();
+      hideSpinner();
+      document.querySelector("#modal-ques").style.display = "none";
+      modalBg.style.display = "none";
+      document.querySelector(".delete-success").style.display = "block";
+      setTimeout(function () {
+        document.querySelector(".delete-success").style.display = "none";
+      }, 1500);
+    }
+  } catch (error) {
+    console.error("api error", error);
+    hideSpinner();
   }
-
-  //
-  document.querySelector(".delete-success").style.display = "block";
-  setTimeout(function () {
-    document.querySelector(".delete-success").style.display = "none";
-  }, 1000);
 }
 
 document.getElementById("delete-button").addEventListener("click", () => {
@@ -524,11 +544,11 @@ document.getElementById("delete-cancle").addEventListener("click", () => {
   document.getElementById("modal-ques").style.display = "none";
 });
 document.getElementById("delete").addEventListener("click", function (event) {
-  if (center_select.classes.length < 1) {
-    deleteParent();
-  } else {
+  if (center_select.classes.length > 0) {
     document.querySelector(".delete-ques").style.display = "none";
     document.querySelector(".delete-ques2").style.display = "block";
+  } else {
+    deleteCenter();
   }
 });
 

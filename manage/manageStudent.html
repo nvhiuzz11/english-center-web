@@ -41,7 +41,7 @@ require '../lib/functionStudent.php';
 		</div>
 		<nav>
 			<ul>
-				<li><a href="./ListClass.php">Quản lý lớp học</a></li>
+				<li><a href="./manageClass.html">Quản lý lớp học</a></li>
 				<li><a style="color: #0088cc;" href="../manage/manageStudent.html">Quản lý học sinh</a></li>
 				<li><a href="../manage/manageTeacher.html">Quản lý giáo viên</a></li>
 				<li><a href="../manage/manageParent.html">Quản lý phụ huynh</a></li>
@@ -67,6 +67,16 @@ require '../lib/functionStudent.php';
 				<button type="submit" id="refesh-btn" name="refesh" style=" background-color: currentcolor "> <img
 						style="width: 30px;" src="../assets/images/Refresh-icon.png" alt=""></button>
 			</form>
+			<div style="    display: flex;align-items: center;">
+				<h3 style="margin-right:5px;      margin-left: 20px;  ">Cơ sở:</h3>
+				<select
+					style=" margin-right: 20px; border: groove;background-color: beige;font-size: 14px;padding:0;height:40px"
+					id="select-center">
+					<option value="">...</option>
+
+				</select>
+			</div>
+
 			<div>
 				<button class="add-student-button">+ Thêm học sinh</button>
 			</div>
@@ -278,7 +288,7 @@ require '../lib/functionStudent.php';
 									<tr>
 										<td></td>
 										<td>
-											
+
 										</td>
 									</tr>
 								</table>
@@ -529,7 +539,7 @@ require '../lib/functionStudent.php';
 <script>
 
 
-	
+
 
 
 	// async function fetchParent() {

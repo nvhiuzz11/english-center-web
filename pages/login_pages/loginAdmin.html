@@ -132,14 +132,14 @@ if ($test) {
 		<form id="loginForm">
 			<input type="text" name="username" placeholder="Username" id="username">
 			<p id="usernameError" style="color:red; margin-bottom: 20px; font-size: 18px;"></p>
-		
+
 			<input type="password" name="password" placeholder="Password" id="password">
 			<p id="passwordError" style="color:red; margin-bottom: 20px; font-size: 18px;"></p>
-		
+
 			<input type="submit" id="submitButton" value="Login">
-		
+
 			<!-- Thêm khu vực để spinner hiển thị -->
-			
+
 		</form>
 		<div id="spinner" style="display: none; margin-top: 20px; align-items: center; justify-content: center;">
 			<img src="https://cdn.pixabay.com/animation/2023/10/08/03/19/03-19-26-213_512.gif" alt="Loading..."
@@ -147,7 +147,7 @@ if ($test) {
 		</div>
 		<a href="./login.php" class="back">Back</a>
 	</div>
-	
+
 </body>
 
 
@@ -158,69 +158,69 @@ if ($test) {
 	document.getElementById('loginForm').addEventListener('submit', function (event) {
 		document.getElementById('usernameError').textContent = '';
 		document.getElementById('passwordError').textContent = '';
-			event.preventDefault(); 
+		event.preventDefault();
 
-			const submitButton = document.getElementById('submitButton');
-			const spinner = document.getElementById('spinner');
+		const submitButton = document.getElementById('submitButton');
+		const spinner = document.getElementById('spinner');
 
-		
-			submitButton.value = 'Loading...';
-			submitButton.disabled = true;
-			spinner.style.display = 'block';
 
-			
-			const username = document.getElementById('username').value;
-			const password = document.getElementById('password').value;
+		submitButton.value = 'Loading...';
+		submitButton.disabled = true;
+		spinner.style.display = 'block';
 
-		
-			if (!username || !password) {
-				document.getElementById('usernameError').textContent = !username ? 'Chưa nhập username' : '';
-				document.getElementById('passwordError').textContent = !password ? 'Chưa nhập passowrd' : '';
 
-			
+		const username = document.getElementById('username').value;
+		const password = document.getElementById('password').value;
+
+
+		if (!username || !password) {
+			document.getElementById('usernameError').textContent = !username ? 'Chưa nhập username' : '';
+			document.getElementById('passwordError').textContent = !password ? 'Chưa nhập passowrd' : '';
+
+
+			submitButton.value = 'Login';
+			submitButton.disabled = false;
+			spinner.style.display = 'none';
+			return;
+		}
+
+		fetch(`${apiUrl}/api/auth/login`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				userName: username,
+				password: password,
+			}),
+		})
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('Login failed');
+				}
+				return response.json();
+			})
+			.then(data => {
+
+				console.log('Login successful:', data);
+				localStorage.setItem('accessToken', data.accessToken);
+				localStorage.setItem('refreshToken', data.refreshToken);
+				//alert('Đăng nhập thành công');
+
+				window.location.href = '../../manage/manageClass.html';
+			})
+			.catch(error => {
+				console.error('Error:', error);
+				document.getElementById('usernameError').textContent = 'Sai thông tin đăng nhập';
+				document.getElementById('passwordError').textContent = 'Sai thông tin đăng nhập';
+			})
+			.finally(() => {
+
 				submitButton.value = 'Login';
 				submitButton.disabled = false;
 				spinner.style.display = 'none';
-				return;
-			}
-
-			fetch(`${apiUrl}/api/auth/login`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					userName: username,
-					password: password,
-				}),
-			})
-				.then(response => {
-					if (!response.ok) {
-						throw new Error('Login failed');
-					}
-					return response.json();
-				})
-				.then(data => {
-					
-					console.log('Login successful:', data);
-					localStorage.setItem('accessToken', data.accessToken);
-					localStorage.setItem('refreshToken', data.refreshToken);
-					//alert('Đăng nhập thành công');
-
-					 window.location.href = '../../manage/ListClass.php';
-				})
-				.catch(error => {
-					console.error('Error:', error);
-					document.getElementById('usernameError').textContent = 'Sai thông tin đăng nhập';
-					document.getElementById('passwordError').textContent = 'Sai thông tin đăng nhập';
-				})
-				.finally(() => {
-					
-					submitButton.value = 'Login';
-					submitButton.disabled = false;
-					spinner.style.display = 'none';
-				});
-		});
+			});
+	});
 
 
 

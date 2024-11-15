@@ -8,7 +8,24 @@ var countData;
 var currentPage = 1;
 var ds_hocsinh;
 var ds_phuhuynh;
+
+var selectedCenter = "";
+
+var listCenter;
+
 const accessToken = localStorage.getItem("accessToken");
+
+const store_ds_hocsinh = localStorage.getItem("ds_hocsinh");
+const store_ds_phuhuynh = localStorage.getItem("ds_phuhuynh");
+if (store_ds_hocsinh) {
+  ds_hocsinh = JSON.parse(store_ds_hocsinh);
+  showTableStudent(ds_hocsinh, selectedCenter, "");
+}
+if (store_ds_phuhuynh) {
+  ds_phuhuynh = JSON.parse(store_ds_phuhuynh);
+}
+
+listCenter = JSON.parse(localStorage.getItem("listCenter"));
 
 fetchStudent();
 fetchParent();
@@ -22,7 +39,9 @@ function hideSpinner() {
 }
 
 async function fetchStudent() {
-  showSpinner();
+  if (!ds_hocsinh) {
+    showSpinner();
+  }
   try {
     const res = await fetch(`${API_URL}/api/students`, {
       method: "GET",
@@ -37,9 +56,11 @@ async function fetchStudent() {
       console.log("resData", resData);
       ds_hocsinh = resData.docs;
 
+      localStorage.setItem("ds_hocsinh", JSON.stringify(ds_hocsinh));
+
       countData = ds_hocsinh.length;
 
-      showTableStudent(ds_hocsinh, "");
+      showTableStudent(ds_hocsinh, selectedCenter, "");
 
       hideSpinner();
     }
@@ -63,11 +84,44 @@ async function fetchParent() {
       const resData = await res.json();
 
       ds_phuhuynh = resData.docs;
+
+      localStorage.setItem("ds_phuhuynh", JSON.stringify(ds_phuhuynh));
+
       console.log("ds_phuhuynh", ds_phuhuynh);
     }
   } catch (error) {
     console.log("fetchStudent error", error);
   }
+}
+
+fetchCenter();
+
+async function fetchCenter() {
+  fetch(`${API_URL}/api/centers?includeClass=true`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      listCenter = data.docs;
+
+      var select1 = document.getElementById("select-center");
+
+      listCenter.forEach((center) => {
+        const option = document.createElement("option");
+        option.value = center.id;
+        option.text = `Cơ sở ${center.id}: ${center.name}`;
+
+        select1.appendChild(option);
+      });
+
+      localStorage.setItem("listCenter", JSON.stringify(listCenter));
+    })
+    .catch((error) => {
+      console.log("Error:", error);
+    });
 }
 
 function formatMoney(number) {
@@ -101,6 +155,14 @@ function numberWithCommas(x) {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
+function getCenterNameById(id) {
+  if (!listCenter) return "";
+  else {
+    const center = listCenter.find((center) => center.id === id);
+    return center ? center.name : "";
+  }
+}
+
 function getGender(gender) {
   if (gender == 1) {
     return "Nam";
@@ -124,16 +186,20 @@ function getRecordByPage(list, page, pageSize = 50) {
   return list.slice(startIndex, endIndex);
 }
 
-function showTableStudent(list, text) {
+function showTableStudent(list, center, text) {
   let i = 1;
 
   const tableBody = document.querySelector(".tbody-1");
   tableBody.innerHTML = "";
 
-  if (!list || list.length === 0) {
-    if (text != "") {
-      tableBody.innerHTML += `<h2>Không tìm thấy kết quả phù hợp "${text}"</h2>`;
-    }
+  if (center) {
+    list = list.filter((student) =>
+      student?.classes.some((classItem) => classItem.centerId == center)
+    );
+  }
+
+  if (!list || list.length == 0) {
+    tableBody.innerHTML += `<h2>Không tìm thấy kết quả phù hợp!</h2>`;
   } else {
     const listItem = getRecordByPage(list, currentPage, 50);
     listItem.forEach((item) => {
@@ -156,6 +222,13 @@ function showTableStudent(list, text) {
   showindex();
 }
 
+var selectCenter = document.getElementById("select-center");
+
+selectCenter.addEventListener("change", function () {
+  selectedCenter = selectCenter.value;
+  searchList(1);
+});
+
 // tim kiem
 function searchKey(keyword) {
   const lowerKeyword = keyword.toLowerCase();
@@ -174,7 +247,7 @@ function searchList(number = 1) {
   var text = document.getElementById("keyword").value;
   const listSearch = searchKey(text);
   currentPage = number;
-  showTableStudent(listSearch, text);
+  showTableStudent(listSearch, selectedCenter, text);
   removeSortIcons();
 }
 
@@ -214,7 +287,6 @@ function handlePageIndexClick(clickedElement, pageNumber) {
 function checkAttendance(studentID, attendances) {
   let attendedCount = 0;
   let missedCount = 0;
-  console.log("attendances", attendances);
   if (attendances != null) {
     attendances.forEach((attendance) => {
       if (attendance.studentIds.includes(studentID)) {
@@ -319,6 +391,7 @@ document.querySelector(".tbody-1").addEventListener("click", function (event) {
 
     var html = "";
     var color = "";
+    console.log("classes lg", classes.length);
     if (classes.length == 0) {
       html += "<p>Học sinh chưa tham gia lớp học nào </p>";
     } else {
@@ -363,7 +436,7 @@ document.querySelector(".tbody-1").addEventListener("click", function (event) {
           "</td>" +
           "<td>" +
           '<p id="name =name-teacher">Tên giáo viên:  ' +
-          "Ten giao vien" +
+          item?.teachers[0]?.name +
           "</p>" +
           "</td>" +
           "</tr>" +
@@ -375,9 +448,22 @@ document.querySelector(".tbody-1").addEventListener("click", function (event) {
           "</p>" +
           "</td>" +
           "<td>" +
-          '<p id="de-fee-class">Giảm học phí:  ' +
-          "Giam hoc phi" +
-          "%" +
+          '<p id="de-fee-class">Giảm học phí:  ';
+        if (item.StudentClasses.reducePercent != null) {
+          html += item.StudentClasses.reducePercent;
+        } else {
+          html += 0;
+        }
+
+        html +=
+          " %" +
+          "</p>" +
+          "</td>" +
+          "</tr>" +
+          "<tr>" +
+          "<td>" +
+          "<p >Cơ sở: " +
+          getCenterNameById(item.centerId) +
           "</p>" +
           "</td>" +
           "</tr>" +
@@ -393,15 +479,15 @@ document.querySelector(".tbody-1").addEventListener("click", function (event) {
           "</table>" +
           "</div>";
       });
-
-      document.querySelector(".class-of-student").innerHTML = html;
     }
+
+    document.querySelector(".class-of-student").innerHTML = html;
 
     // // thong tin tai khoan
 
     document.getElementById("name-login").textContent =
       student_select.user.userName;
-    document.getElementById("username-login").textContent =
+    document.getElementById("username-login").value =
       student_select.user.userName;
     document.getElementById("date_logup").textContent =
       "Ngày đăng ký  :  " + formatDateFromISO(student_select.createdAt);
@@ -954,69 +1040,71 @@ document.getElementById("change-pass-btn").addEventListener("click", () => {
   document.getElementById("div-change-pass").style.display = "block";
 });
 
-document.getElementById("change").addEventListener("click", function (event) {
-  event.preventDefault();
-  var pass = document.getElementById("new-password").value;
+document
+  .getElementById("change")
+  .addEventListener("click", async function (event) {
+    event.preventDefault();
+    var pass = document.getElementById("new-password").value;
 
-  var username = document.getElementById("username-login").value;
+    var username = document.getElementById("username-login").value;
 
-  var err_pass = "";
-  var err_username = "";
-  var check = true;
+    var err_pass = "";
+    var err_username = "";
+    var check = true;
 
-  if (!pass) {
-    err_pass = "*Bạn chưa nhập mật khẩu";
-    check = false;
-  }
-  if (!username) {
-    err_username = "*Bạn chưa nhập tên tài khoản";
-    check = false;
-  }
+    if (!pass) {
+      err_pass = "*Bạn chưa nhập mật khẩu";
+      check = false;
+    } else if (pass.length < 8) {
+      err_pass = "*Mật khẩu cần ít nhất 8 ký tự";
+      check = false;
+    }
+    if (!username) {
+      err_username = "*Bạn chưa nhập tên tài khoản";
+      check = false;
+    }
 
-  document.getElementById("err-pass").textContent = err_pass;
-  document.getElementById("err-username").textContent = err_username;
+    document.getElementById("err-pass").textContent = err_pass;
+    document.getElementById("err-username").textContent = err_username;
 
-  if (!check) {
-    return;
-  }
+    if (!check) {
+      return;
+    }
 
-  $.ajax({
-    url: "../api/changeAccStudent.php",
-    type: "POST",
-    data: {
-      id: student_select.MaHS,
-      username: username,
-      pass: pass,
-    },
-    success: function (res) {
-      ds_tk_hs = JSON.parse(res);
-
-      for (var i = 0; i < ds_tk_hs.length; i++) {
-        if (ds_tk_hs[i].MaHS === student_select.MaHS) {
-          document.getElementById("name-login").textContent =
-            ds_tk_hs[i]["UserName"];
-          document.getElementById("username-login").value =
-            ds_tk_hs[i]["UserName"];
-          document.getElementById("password").value = ds_tk_hs[i]["Password"];
-          document.getElementById("date_logup").textContent =
-            "Ngày đăng ký  :  " + convertDateFormat(ds_tk_hs[i]["NgayDK"]);
-          break;
+    showSpinner();
+    try {
+      const response = await fetch(
+        `${API_URL}/api/user-password-by-admin/${student_select.userId}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            password: pass,
+          }),
         }
-      }
-    },
-    error: function (xhr, status, error) {
-      console.error(error);
-    },
-  });
-  document.getElementById("div-change-pass").style.display = "none";
-  document.querySelector(".change-pass-success").style.display = "block";
+      );
 
-  setTimeout(function () {
-    document.querySelector(".change-pass-success").style.display = "none";
-    document.getElementById("err-pass").textContent = "";
-    document.getElementById("err-username").textContent = "";
-  }, 1000);
-});
+      if (response.status === 200) {
+        hideSpinner();
+
+        document.getElementById("new-password").value = "";
+        document.getElementById("div-change-pass").style.display = "none";
+        document.querySelector(".change-pass-success").style.display = "block";
+
+        setTimeout(function () {
+          document.querySelector(".change-pass-success").style.display = "none";
+          document.getElementById("err-pass").textContent = "";
+          document.getElementById("err-username").textContent = "";
+        }, 1000);
+      }
+    } catch (error) {
+      console.error("api error", error);
+      hideSpinner();
+    }
+  });
 
 document.getElementById("cancle-change-pass").addEventListener("click", () => {
   document.getElementById("div-change-pass").style.display = "none";

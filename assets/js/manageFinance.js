@@ -16,13 +16,24 @@ var countData;
 var currentPage = 1;
 var dsHoaDon;
 var filteredData_ds;
+var listCenter;
 
-const accessToken = localStorage.getItem("accessToken");
+var selectedCenter = "";
 
 var selectedStatus = "";
 var dateFilter = "";
 
+const accessToken = localStorage.getItem("accessToken");
+
+const store_ds_hoadon_hocphi = localStorage.getItem("ds_hoadon_hocphi");
+if (store_ds_hoadon_hocphi) {
+  dsHoaDon = JSON.parse(store_ds_hoadon_hocphi);
+  hienthids(selectedStatus, selectedCenter, dsHoaDon, currentPage, dateFilter);
+}
+
 fetchCost();
+
+listCenter = JSON.parse(localStorage.getItem("listCenter"));
 
 function showSpinner() {
   document.getElementById("loadingSpinner").style.display = "flex";
@@ -33,7 +44,9 @@ function hideSpinner() {
 }
 
 async function fetchCost() {
-  showSpinner();
+  if (!dsHoaDon) {
+    showSpinner();
+  }
   try {
     const res = await fetch(`${API_URL}/api/costs?type=2`, {
       method: "GET",
@@ -49,17 +62,95 @@ async function fetchCost() {
       dsHoaDon = resData.docs;
       countData = dsHoaDon.length;
 
+      localStorage.setItem("ds_hoadon_hocphi", JSON.stringify(dsHoaDon));
+
       //   showTableStudent(ds_hocsinh, "");
-      filteredData_ds = dsHoaDon;
-      hienthids(selectedStatus, dsHoaDon, currentPage, dateFilter);
+      hienthids(
+        selectedStatus,
+        selectedCenter,
+        dsHoaDon,
+        currentPage,
+        dateFilter
+      );
 
       hideSpinner();
     }
   } catch (error) {
     hideSpinner();
-    console.log("fetchStudent error", error);
+    console.log("fetchCost error", error);
   }
 }
+
+fetchCenter();
+
+async function fetchCenter() {
+  fetch(`${API_URL}/api/centers?includeClass=true`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      listCenter = data.docs;
+
+      var select1 = document.getElementById("select-center");
+
+      listCenter.forEach((center) => {
+        const option = document.createElement("option");
+        option.value = center.id;
+        option.text = `Cơ sở ${center.id}: ${center.name}`;
+
+        select1.appendChild(option);
+      });
+
+      localStorage.setItem("listCenter", JSON.stringify(listCenter));
+    })
+    .catch((error) => {
+      console.log("Error:", error);
+    });
+}
+
+// async function fetchCost() {
+//   if (!dsHoaDon) {
+//     showSpinner();
+//   }
+
+//   const controller = new AbortController();
+//   const timeoutId = setTimeout(() => controller.abort(), 20000); // 10 giây timeout
+
+//   try {
+//     const res = await fetch(`${API_URL}/api/costs?type=2`, {
+//       method: "GET",
+//       headers: {
+//         Authorization: `Bearer ${accessToken}`,
+//         "Content-Type": "application/json",
+//       },
+//       signal: controller.signal, // Thêm signal cho AbortController
+//     });
+
+//     clearTimeout(timeoutId); // Xóa timeout nếu yêu cầu hoàn thành trước khi hết thời gian chờ
+
+//     if (res.status === 200) {
+//       const resData = await res.json();
+//       console.log("resData", resData);
+//       dsHoaDon = resData.docs;
+//       countData = dsHoaDon.length;
+
+//       localStorage.setItem("ds_hoadon_hocphi", JSON.stringify(dsHoaDon));
+
+//       hienthids(selectedStatus, dsHoaDon, currentPage, dateFilter);
+//       hideSpinner();
+//     }
+//   } catch (error) {
+//     hideSpinner();
+//     if (error.name === "AbortError") {
+//       console.log("Request timed out");
+//     } else {
+//       console.log("fetchCost error", error);
+//     }
+//   }
+// }
 
 /////// funct
 function getGender(gender) {
@@ -79,16 +170,47 @@ function getCostStatus(status) {
   }
 }
 
+function getCenterNameById(id) {
+  if (!listCenter) return "";
+  else {
+    const center = listCenter.find((center) => center.id === id);
+    return center ? center.name : "";
+  }
+}
+
 function getRecordByPage(list, page, pageSize = 50) {
   const startIndex = (page - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   return list.slice(startIndex, endIndex);
 }
 
+function formatDateFromISO(isoString) {
+  const date = new Date(isoString);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+
+  return `${day}-${month}-${year}`;
+}
+
 function convertDateFormat(dateString) {
   var dateParts = dateString.split("-");
   var formattedDate = dateParts[2] + "-" + dateParts[1] + "-" + dateParts[0];
   return formattedDate;
+}
+
+function convertDateToIOS(dateString) {
+  const date = new Date(dateString);
+  const formattedDate = date
+    .toISOString()
+    .replace("T", " ")
+    .replace("Z", "000+00");
+  return formattedDate;
+}
+
+function convertToMoney(moneyString) {
+  const moneyNumber = parseFloat(moneyString.replace(/,/g, ""));
+  return moneyNumber;
 }
 
 document.getElementById("Tab1").style.display = "block";
@@ -108,21 +230,26 @@ function formatMoney(number) {
 }
 //Hiẹn thị bảng
 
-function hienthids(status, filteredData, page, date) {
-  console.log("filteredData", filteredData);
-  filteredData_ds = [];
+var selectCenter = document.getElementById("select-center");
+
+selectCenter.addEventListener("change", function () {
+  selectedCenter = selectCenter.value;
+  searchList(1);
+});
+
+function hienthids(status, center, listData, page, date) {
   document.querySelector(".tbody-1").innerHTML = "";
   document.querySelector(".tbody-5").innerHTML = "";
-  var filteredData = dsHoaDon;
+  var filteredData = listData;
   if (status != "") {
-    filteredData = filteredData.filter(function (hoaDon) {
-      return hoaDon["TrangThai"] === status;
+    filteredData = filteredData.filter(function (item) {
+      return item.status == status;
     });
   }
   if (date != "") {
-    filteredData = filteredData.filter(function (hoaDon) {
-      let thang1 = hoaDon["ThoiGian"].split("/")[0];
-      let nam1 = hoaDon["ThoiGian"].split("/")[1];
+    filteredData = filteredData.filter(function (item) {
+      let thang1 = item.forMonth;
+      let nam1 = item.forYear;
 
       let thang2 = parseInt(date.split("-")[1], 10);
 
@@ -133,10 +260,15 @@ function hienthids(status, filteredData, page, date) {
     });
   }
 
+  if (center) {
+    filteredData = filteredData.filter(
+      (bill) => bill?.class.centerId == center
+    );
+  }
+
   if (filteredData.length == 0) {
     document.querySelector(".tbody-1").innerHTML = "Không có dữ liệu phù hợp !";
   }
-  filteredData_ds = filteredData;
 
   var html = "";
   var html_last = "";
@@ -146,7 +278,8 @@ function hienthids(status, filteredData, page, date) {
   var tongSoTienDaDong = 0;
   var tongSoTienPhaiDong = 0;
   if (filteredData.length != 0) {
-    const listItem = getRecordByPage(filteredData, currentPage, 50);
+    showindex(filteredData.length);
+    const listItem = getRecordByPage(filteredData, page, 50);
     let i = 1;
 
     listItem.filter((item) => {
@@ -173,13 +306,13 @@ function hienthids(status, filteredData, page, date) {
         '<td style = "background-color:' +
         color +
         '">' +
-        'filteredData[i]["TenHS"]' +
+        item.user.student.name +
         "</td>";
       html +=
         '<td style = "background-color:' +
         color +
         '">' +
-        'filteredData[i]["MaLop"]' +
+        item.class.code +
         "</td>";
       html +=
         '<td style = "background-color:' +
@@ -191,25 +324,25 @@ function hienthids(status, filteredData, page, date) {
         '<td style = "background-color:' +
         color +
         '">' +
-        formatMoney(item.totalMoney) +
+        formatMoney(item.originTotalMoney) +
         "</td>";
       html +=
         '<td style = "background-color:' +
         color +
         '">' +
-        ' filteredData[i]["GiamHocPhi"]' +
+        item.studentClass.reducePercent +
         "%</td>";
       html +=
         '<td style = "background-color:' +
         color +
         '">' +
-        'numberWithCommas(filteredData[i]["SoTienGiam"])' +
+        formatMoney(item.totalReduceMoney) +
         "</td>";
       html +=
         '<td style = "background-color:' +
         color +
         '">' +
-        'numberWithCommas(filteredData[i]["SoTienPhaiDong"])' +
+        formatMoney(item.totalMoney) +
         "</td>";
       html +=
         '<td style = "background-color:' +
@@ -234,9 +367,10 @@ function hienthids(status, filteredData, page, date) {
       html += "</tr>";
 
       tongSoTien += parseInt(item.totalMoney);
-
-      //   tongSoTienGiam += parseInt(filteredData[i]["SoTienGiam"]);
-      //   tongSoTienPhaiDong += parseInt(filteredData[i]["SoTienPhaiDong"]);
+      if (item.totalReduceMoney) {
+        tongSoTienGiam += parseInt(item.totalReduceMoney);
+      }
+      tongSoTienPhaiDong += parseInt(item.totalMoney);
       tongSoTienDaDong += parseInt(item.paidMoney);
     });
 
@@ -347,12 +481,12 @@ function hienthids(status, filteredData, page, date) {
     html_last += "<td >" + "Tổng : </td>";
     html_last += "<td >" + formatMoney(tongSoTien) + "</td>";
     html_last +=
-      "<td >" + "((tongSoTienGiam / tongSoTien) * 100).toFixed(2)" + "%</td>";
-    html_last += "<td >" + " formatMoney(tongSoTienGiam)" + "</td>";
-    html_last += "<td >" + "formatMoney(tongSoTienPhaiDong)" + "</td>";
+      "<td >" + ((tongSoTienGiam / tongSoTien) * 100).toFixed(2) + "%</td>";
+    html_last += "<td >" + formatMoney(tongSoTienGiam) + "</td>";
+    html_last += "<td >" + formatMoney(tongSoTienPhaiDong) + "</td>";
     html_last += "<td >" + formatMoney(tongSoTienDaDong) + "</td>";
     html_last +=
-      "<td >" + "formatMoney(tongSoTienPhaiDong - tongSoTienDaDong)" + "</td>";
+      "<td >" + formatMoney(tongSoTienPhaiDong - tongSoTienDaDong) + "</td>";
     html_last += "<td >" + "</td>";
     html_last += "</tr>";
     document.querySelector(".tbody-1").innerHTML = html;
@@ -364,63 +498,67 @@ var selectStatus = document.getElementById("select-status");
 selectStatus.addEventListener("change", function () {
   selectedStatus = selectStatus.value;
   currentPage = 1;
-  hienthids(selectedStatus, filteredData_ds, currentPage, dateFilter);
-  showindex();
+  searchList(1);
 });
 
 document.getElementById("month-year").addEventListener("change", function () {
   dateFilter = document.getElementById("month-year").value;
   currentPage = 1;
-  hienthids(selectedStatus, filteredData_ds, currentPage, dateFilter);
-  showindex();
+  searchList(1);
 });
 
-// function showTableFinance(text, page, collumSort, order, date) {
-//   $.ajax({
-//     url: "../api/showTableFinance.php",
-//     type: "POST",
-//     data: {
-//       key: text,
-//       collumSort: collumSort,
-//       order: order,
-//     },
-//     success: function (res) {
-//       dsHoaDon = JSON.parse(res);
-//       hienthids(selectedStatus, filteredData_ds, page, date);
-//       showindex();
-//     },
-//     error: function (xhr, status, error) {
-//       console.error(error);
-//     },
-//   });
-// }
+const removeVietnameseTones = (str) => {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D");
+};
 
-// function searchKey(keyword) {
-//   const lowerKeyword = keyword.toLowerCase();
-//   return ds_hocsinh.filter((item) => {
-//     return (
-//       String(item.id).includes(lowerKeyword) ||
-//       item.name.toLowerCase().includes(lowerKeyword) ||
-//       item.address.toLowerCase().includes(lowerKeyword) ||
-//       String(item.phone).includes(lowerKeyword) ||
-//       String(item.age).includes(lowerKeyword)
-//     );
-//   });
-// }
+function searchKey(keyword) {
+  const lowerKeyword = keyword.toLowerCase();
+  return dsHoaDon.filter((item) => {
+    return (
+      String(item.id).includes(lowerKeyword) ||
+      removeVietnameseTones(item.name.toLowerCase()).includes(lowerKeyword) ||
+      item.name.toLowerCase().includes(lowerKeyword) ||
+      removeVietnameseTones(item.user.student.name.toLowerCase()).includes(
+        lowerKeyword
+      ) ||
+      item.user.student.name.toLowerCase().includes(lowerKeyword) ||
+      removeVietnameseTones(item.class.code.toLowerCase()).includes(
+        lowerKeyword
+      ) ||
+      `${item.forMonth}/${item.forYear}`.toLowerCase().includes(lowerKeyword) ||
+      String(item.debtMoney).includes(lowerKeyword) ||
+      String(item.originTotalMoney).includes(lowerKeyword) ||
+      String(item.paidMoney).includes(lowerKeyword) ||
+      String(item.studentClass.reducePercent).includes(lowerKeyword) ||
+      String(item.totalMoney).includes(lowerKeyword) ||
+      String(item.totalReduceMoney).includes(lowerKeyword)
+    );
+  });
+}
 
 function searchList(number = 1) {
-  collum = "";
-  orderby = "";
   var text = document.getElementById("keyword").value;
+
+  const listSearch = searchKey(text);
   currentPage = number;
-  showTableFinance(text, 1, collum, orderby, dateFilter);
+  hienthids(
+    selectedStatus,
+    selectedCenter,
+    listSearch,
+    currentPage,
+    dateFilter
+  );
   removeSortIcons();
 }
 
-function showindex() {
+function showindex(length) {
   var html = "";
 
-  var count = Math.ceil(filteredData_ds.length / 50);
+  var count = Math.ceil(length / 50);
 
   for (let i = 1; i <= count; i++) {
     var isActive = i === currentPage ? "activeIndex" : "";
@@ -465,70 +603,59 @@ function parseDateValue(value) {
 var sortDirection = {}; // Store the current sort direction for each column
 
 function sortTable(columnIndex) {
-  // var table = document.getElementById('table-1');
-  // var tbody = table.querySelector('.tbody-1');
-  // var rows = Array.from(tbody.getElementsByTagName('tr'));
-  // var sttValues = rows.map(function (row) {
-  //     return parseInt(row.getElementsByTagName('td')[0].innerText.trim());
-  // });
+  var table = document.getElementById("table-1");
+  var tbody = table.querySelector(".tbody-1");
+  var rows = Array.from(tbody.getElementsByTagName("tr"));
+  var sttValues = rows.map(function (row) {
+    return parseInt(row.getElementsByTagName("td")[0].innerText.trim());
+  });
 
-  // rows.sort(function (a, b) {
-  //     var aValue = a.getElementsByTagName('td')[columnIndex].innerText.trim();
-  //     var bValue = b.getElementsByTagName('td')[columnIndex].innerText.trim();
+  rows.sort(function (a, b) {
+    var aValue = a.getElementsByTagName("td")[columnIndex].innerText.trim();
+    var bValue = b.getElementsByTagName("td")[columnIndex].innerText.trim();
 
-  //     if (columnIndex === 2 || columnIndex === 3 || columnIndex === 4 || columnIndex === 12) {
-  //         if (sortDirection[columnIndex] === 'asc') {
-  //             return aValue.localeCompare(bValue);
-  //         } else {
-  //             return bValue.localeCompare(aValue);
-  //         }
-  //     }
-  //     else
-  //         if (columnIndex === 0) {
-  //             return;
-  //         } else if (columnIndex === 5) {
-  //             var aDate = parseDateValue(aValue);
-  //             var bDate = parseDateValue(bValue);
+    if (
+      columnIndex === 2 ||
+      columnIndex === 3 ||
+      columnIndex === 4 ||
+      columnIndex === 12
+    ) {
+      if (sortDirection[columnIndex] === "asc") {
+        return aValue.localeCompare(bValue);
+      } else {
+        return bValue.localeCompare(aValue);
+      }
+    } else if (columnIndex === 0) {
+      return;
+    } else if (columnIndex === 5) {
+      var aDate = parseDateValue(aValue);
+      var bDate = parseDateValue(bValue);
 
-  //             if (sortDirection[columnIndex] === 'asc') {
-  //                 return aDate - bDate;
-  //             } else {
-  //                 return bDate - aDate;
-  //             }
-  //         } else {
-  //             aValue = parseNumericValue(aValue);
-  //             bValue = parseNumericValue(bValue);
+      if (sortDirection[columnIndex] === "asc") {
+        return aDate - bDate;
+      } else {
+        return bDate - aDate;
+      }
+    } else {
+      aValue = parseNumericValue(aValue);
+      bValue = parseNumericValue(bValue);
 
-  //             if (sortDirection[columnIndex] === 'asc') {
-  //                 return aValue - bValue;
-  //             } else {
-  //                 return bValue - aValue;
-  //             }
-  //         }
+      if (sortDirection[columnIndex] === "asc") {
+        return aValue - bValue;
+      } else {
+        return bValue - aValue;
+      }
+    }
+  });
 
-  // });
+  rows.forEach(function (row, index) {
+    var sttCell = row.getElementsByTagName("td")[0];
+    sttCell.innerText = sttValues[index];
+  });
 
-  // rows.forEach(function (row, index) {
-  //     var sttCell = row.getElementsByTagName('td')[0];
-  //     sttCell.innerText = sttValues[index];
-  // });
-
-  // rows.forEach(function (row) {
-  //     tbody.appendChild(row);
-  // });
-
-  if (columnIndex == 1) collum = "MaHD";
-  else if (columnIndex == 2) collum = "TenHD";
-  else if (columnIndex == 3) collum = "TenHS";
-  else if (columnIndex == 4) collum = "MaLop";
-  else if (columnIndex == 5) collum = "ThoiGian";
-  else if (columnIndex == 6) collum = "SoTien";
-  else if (columnIndex == 7) collum = "GiamHocPhi";
-  else if (columnIndex == 8) collum = "SoTienGiam";
-  else if (columnIndex == 9) collum = "SoTienPhaiDong";
-  else if (columnIndex == 10) collum = "SoTienDaDong";
-  else if (columnIndex == 11) collum = "NoPhiConLai";
-  else if (columnIndex == 12) collum = "TrangThai";
+  rows.forEach(function (row) {
+    tbody.appendChild(row);
+  });
 
   if (sortDirection[columnIndex] === "asc") {
     sortDirection[columnIndex] = "desc";
@@ -537,8 +664,6 @@ function sortTable(columnIndex) {
     sortDirection[columnIndex] = "asc";
     orderby = "asc";
   }
-  var text = document.getElementById("keyword").value;
-  showTableFinance(text, currentPage, collum, orderby, dateFilter);
 
   updateSortIcon(columnIndex);
 }
@@ -619,17 +744,28 @@ function openTab_3(evt, tabName) {
 
 const modalBgAdd = document.querySelector(".modal-bg-add");
 const modalContentAdd = document.querySelector(".modal-content-add");
+const selectYearss = document.getElementById("bill-year-add-ps");
+
+const selectYearps = document.getElementById("bill-year-add");
+
+for (let year = 2022; year <= 2100; year++) {
+  const option = document.createElement("option");
+  option.value = year;
+  option.text = year;
+
+  selectYearss.appendChild(option);
+}
+
+for (let year = 2022; year <= 2100; year++) {
+  const option = document.createElement("option");
+  option.value = year;
+  option.text = year;
+
+  selectYearps.appendChild(option);
+}
 
 document.querySelector(".add-bill-button").addEventListener("click", () => {
   modalBgAdd.style.display = "block";
-  const selectYear = document.getElementById("bill-year-add-ps");
-
-  for (let year = 2022; year <= 2100; year++) {
-    const option = document.createElement("option");
-    option.value = year;
-    option.text = year;
-    selectYear.appendChild(option);
-  }
 });
 
 var monthSelect = document.getElementById("bill-month-add");
@@ -639,10 +775,35 @@ var classsSelect = document.getElementById("bill-class-add");
 monthSelect.addEventListener("change", updateclasssOptions);
 yearSelect.addEventListener("change", updateclasssOptions);
 var addedClasses = [];
+var classData = [];
 // Hàm cập nhật các giá trị trong select bill-classs-add
-function updateclasssOptions() {
+async function updateclasssOptions() {
   var selectedMonth = monthSelect.value;
   var selectedYear = yearSelect.value;
+
+  classData = [];
+
+  if (selectedMonth && selectedYear) {
+    try {
+      const res = await fetch(
+        `${API_URL}/api/search-class-work?month=${selectedMonth}&year=${selectedYear}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (res.status === 200) {
+        const resData = await res.json();
+        classData = resData;
+      }
+    } catch (error) {
+      console.log("fetchCost error", error);
+    }
+  }
+
   var check = true;
   if (inputsValue.length != 0) {
     inputs.forEach((input) => outputDiv.removeChild(input));
@@ -655,42 +816,26 @@ function updateclasssOptions() {
   }
 
   // Add default option
+
   var defaultOption = document.createElement("option");
   defaultOption.value = "";
   defaultOption.textContent = "Chọn lớp học";
   classsSelect.appendChild(defaultOption);
 
   addedClasses = [];
-  for (var i = 0; i < ds_diemdanh.length; i++) {
-    var diemdanh = ds_diemdanh[i];
-    var diemdanhMonth = parseInt(diemdanh.ThoiGian.split("-")[1]);
-    var diemdanhYear = parseInt(diemdanh.ThoiGian.split("-")[0]);
+  if (classData.length > 0) {
+    var defaultOption = document.createElement("option");
+    defaultOption.value = "Tất cả";
+    defaultOption.textContent = "Tất cả";
+    classsSelect.appendChild(defaultOption);
 
-    if (diemdanhMonth == selectedMonth && diemdanhYear == selectedYear) {
-      var classs = {
-        MaLop: diemdanh.MaLop,
-      };
-
-      var isclasssAdded = addedClasses.some(function (addedclasss) {
-        return addedclasss.MaLop === classs.MaLop;
-      });
-
-      if (!isclasssAdded && check) {
-        var defaultOption = document.createElement("option");
-        defaultOption.value = "Tất cả";
-        defaultOption.textContent = "Tất cả";
-        classsSelect.appendChild(defaultOption);
-        check = false;
-      }
-
-      if (!isclasssAdded) {
-        addedClasses.push(classs);
-        var option = document.createElement("option");
-        option.value = classs.MaLop;
-        option.text = classs.MaLop;
-        classsSelect.add(option);
-      }
-    }
+    classData.forEach((item) => {
+      addedClasses.push(item);
+      var option = document.createElement("option");
+      option.value = item.id;
+      option.text = item.code;
+      classsSelect.add(option);
+    });
   }
 }
 
@@ -715,9 +860,9 @@ select.addEventListener("change", (event) => {
     for (var i = 0; i < options_All.length; i++) {
       const input = document.createElement("input");
       input.type = "text";
-      input.value = options_All[i].MaLop;
+      input.value = options_All[i].code;
       input.setAttribute("readonly", "readonly");
-      inputsValue.push(input.value);
+      inputsValue.push(options_All[i].id);
       inputs.push(input);
       outputDiv.appendChild(input);
     }
@@ -728,9 +873,11 @@ select.addEventListener("change", (event) => {
     if (selectedOption !== "" && check) {
       const input = document.createElement("input");
       input.type = "text";
-      input.value = selectedOption;
+      const x = classData.filter((item) => item.id == selectedOption);
+
+      input.value = x[0].code;
       input.setAttribute("readonly", "readonly");
-      inputsValue.push(selectedOption);
+      inputsValue.push(parseInt(selectedOption));
       inputs.push(input);
       outputDiv.appendChild(input);
     }
@@ -766,7 +913,7 @@ document.querySelector(".btn-close-add").addEventListener("click", () => {
 
 document
   .getElementById("sumit-bill-add")
-  .addEventListener("click", function (event) {
+  .addEventListener("click", async function (event) {
     var check = true;
 
     event.preventDefault();
@@ -802,55 +949,117 @@ document
     } else document.getElementById("lb-class-add").textContent = "";
 
     if (!check) return;
-    document.getElementById("class-add-bill").value = inputsValue;
 
-    const class_bill = document.getElementById("class-add-bill").value;
+    try {
+      showSpinner();
 
-    $.ajax({
-      url: "../api/addBill.php",
-      type: "POST",
-      data: {
-        name: name_bill,
-        month: month_bill,
-        year: year_bill,
-        class: class_bill,
-      },
-      success: function (res) {
-        var text = document.getElementById("keyword").value;
-        showTableFinance(text, currentPage, collum, orderby, dateFilter);
-      },
-      error: function (xhr, status, error) {
-        console.error(error);
-      },
-    });
+      const promises = inputsValue.map((value) => {
+        return fetch(`${API_URL}/api/cost-class`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: name_bill,
+            classId: value,
+            month: month_bill,
+            year: year_bill,
+          }),
+        });
+      });
 
-    document.getElementById("tb1").innerHTML =
-      "Đã thêm hóa đơn tháng " + month_bill + "/" + year_bill + " thành công!";
-    document.getElementById("form-add-bill").reset();
+      const responses = await Promise.all(promises);
 
-    document.querySelector(".add-success").style.display = "block";
+      // Check if any response failed
+      const allSuccess = responses.every((response) => response.status === 200);
 
-    setTimeout(function () {
-      document.querySelector(".add-success").style.display = "none";
-    }, 1500);
+      if (allSuccess) {
+        await fetchCost();
+        searchList(currentPage);
+
+        document.getElementById("tb1").innerHTML =
+          "Đã thêm hóa đơn tháng " +
+          month_bill +
+          "/" +
+          year_bill +
+          " thành công!";
+
+        hideSpinner();
+        document.getElementById("form-add-bill").reset();
+
+        document.querySelector(".add-success").style.display = "block";
+
+        setTimeout(function () {
+          document.querySelector(".add-success").style.display = "none";
+        }, 1500);
+      } else {
+        for (let response of responses) {
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.log(`Error ${response.status}:`, errorData);
+
+            document.getElementById("text-mess").innerText = errorData.message;
+            document.querySelector(".add-bill-warning").style.display = "block";
+            document.querySelector("#modal-ques").style.display = "block";
+          }
+        }
+
+        hideSpinner();
+      }
+    } catch (error) {
+      hideSpinner();
+      console.log("Error:", error);
+    }
   });
 
 var classSelect = document.getElementById("bill-class-add-ps");
 var studentSelect = document.getElementById("name-student-add-bill");
+var student_ps_data = [];
 
-classSelect.addEventListener("change", function () {
+classSelect.addEventListener("change", async function () {
   studentSelect.innerHTML = '<option value="">Chọn Học viên</option>';
 
-  var selectedClass = classSelect.value;
-  for (var i = 0; i < dshs_lopxHS.length; i++) {
-    var student = dshs_lopxHS[i];
-    if (student.MaLop === selectedClass) {
-      var option = document.createElement("option");
-      option.value = student.MaHS;
-      option.textContent = student.MaHS + ". " + student.TenHS;
-      studentSelect.appendChild(option);
+  try {
+    const res = await fetch(
+      `${API_URL}/api/search-student-work?month=${monthSelect_ps.value}&year=${yearSelect_ps.value}&classId=${classsSelect_ps.value}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (res.status === 200) {
+      const resData = await res.json();
+      student_ps_data = resData;
     }
+  } catch (error) {
+    console.log("fetchCost error", error);
   }
+
+  console.log("student_ps_data", student_ps_data);
+
+  if (student_ps_data.length > 0) {
+    student_ps_data.forEach((item) => {
+      var option = document.createElement("option");
+      option.value = item.id;
+      option.textContent = item.id + ". " + item.name;
+      studentSelect.add(option);
+    });
+  }
+
+  // var selectedClass = classSelect.value;
+  // for (var i = 0; i < dshs_lopxHS.length; i++) {
+  //   var student = dshs_lopxHS[i];
+  //   if (student.MaLop === selectedClass) {
+  //     var option = document.createElement("option");
+  //     option.value = student.MaHS;
+  //     option.textContent = student.MaHS + ". " + student.TenHS;
+  //     studentSelect.appendChild(option);
+  //   }
+  // }
 });
 var monthSelect_ps = document.getElementById("bill-month-add-ps");
 var yearSelect_ps = document.getElementById("bill-year-add-ps");
@@ -859,9 +1068,35 @@ var classsSelect_ps = document.getElementById("bill-class-add-ps");
 monthSelect_ps.addEventListener("change", updateclasssOptions2);
 yearSelect_ps.addEventListener("change", updateclasssOptions2);
 var addedClasses_ps = [];
-function updateclasssOptions2() {
+var classData_ps = [];
+async function updateclasssOptions2() {
   var selectedMonth = monthSelect_ps.value;
   var selectedYear = yearSelect_ps.value;
+
+  classData_ps = [];
+
+  if (selectedMonth && selectedYear) {
+    try {
+      const res = await fetch(
+        `${API_URL}/api/search-class-work?month=${selectedMonth}&year=${selectedYear}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (res.status === 200) {
+        const resData = await res.json();
+        classData_ps = resData;
+      }
+    } catch (error) {
+      console.log("fetchCost error", error);
+    }
+  }
+  console.log("classData_ps", classData_ps);
+
   var check = true;
 
   while (classsSelect_ps.options.length > 0) {
@@ -875,34 +1110,21 @@ function updateclasssOptions2() {
   classsSelect_ps.appendChild(defaultOption);
 
   addedClasses = [];
-  for (var i = 0; i < ds_diemdanh.length; i++) {
-    var diemdanh = ds_diemdanh[i];
-    var diemdanhMonth = parseInt(diemdanh.ThoiGian.split("-")[1]);
-    var diemdanhYear = parseInt(diemdanh.ThoiGian.split("-")[0]);
 
-    if (diemdanhMonth == selectedMonth && diemdanhYear == selectedYear) {
-      var classs = {
-        MaLop: diemdanh.MaLop,
-      };
-
-      var isclasssAdded = addedClasses.some(function (addedclasss) {
-        return addedclasss.MaLop === classs.MaLop;
-      });
-
-      if (!isclasssAdded) {
-        addedClasses.push(classs);
-        var option = document.createElement("option");
-        option.value = classs.MaLop;
-        option.text = classs.MaLop;
-        classsSelect_ps.add(option);
-      }
-    }
+  if (classData_ps.length > 0) {
+    classData_ps.forEach((item) => {
+      addedClasses.push(item);
+      var option = document.createElement("option");
+      option.value = item.id;
+      option.text = item.code;
+      classsSelect_ps.add(option);
+    });
   }
 }
 
 document
   .getElementById("sumit-bill-add-ps")
-  .addEventListener("click", function (event) {
+  .addEventListener("click", async function (event) {
     var check = true;
 
     event.preventDefault();
@@ -944,77 +1166,57 @@ document
     } else document.getElementById("lb-name-student-add-bill").textContent = "";
 
     if (!check) return;
+    try {
+      showSpinner();
+      const res = await fetch(`${API_URL}/api/cost-to-student`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: name_bill,
+          classId: Number(class_bill),
+          month: Number(month_bill),
+          year: Number(year_bill),
+          studentId: Number(name_student),
+        }),
+      });
 
-    var hasAttendance = false;
-    console.log(name_student, class_bill, year_bill, month_bill);
-    for (var i = 0; i < ds_diemdanh.length; i++) {
-      var attendance = ds_diemdanh[i];
+      const resData = await res.json();
 
-      // Kiểm tra nếu mã học sinh, mã lớp và thời gian phù hợp
-      let parts = attendance.ThoiGian.split("-");
-      let dateYear = parseInt(parts[0]);
-      let dateMonth = parseInt(parts[1]);
-      if (
-        attendance.MaHS == name_student &&
-        attendance.MaLop == class_bill &&
-        dateYear == year_bill &&
-        dateMonth == month_bill
-      ) {
-        console.log(attendance);
-        if (attendance.dd == 1) {
-          hasAttendance = true;
-          break;
-        }
+      if (res.status === 200) {
+        await fetchCost();
+
+        searchList(currentPage);
+
+        hideSpinner();
+
+        document.getElementById("tb1").innerHTML =
+          "Đã thêm hóa đơn " +
+          month_bill +
+          "/" +
+          year_bill +
+          " của học viên" +
+          " thành công! ";
+
+        document.querySelector(".add-success").style.display = "block";
+        document.getElementById("form-add-bill-ps").reset();
+        setTimeout(function () {
+          document.querySelector(".add-success").style.display = "none";
+        }, 1500);
+      } else {
+        hideSpinner();
+        console.log("Error: ", resData.message || "Có lỗi xảy ra");
+
+        document.getElementById("text-mess").innerText = resData.message;
+        document.querySelector(".add-bill-warning").style.display = "block";
+        document.querySelector("#modal-ques").style.display = "block";
       }
+    } catch (error) {
+      hideSpinner();
+      console.log("add bill error", error);
     }
-
-    if (!hasAttendance) {
-      document.getElementById("tb2").innerHTML =
-        "Học viên " +
-        name_student +
-        " chưa tham gia buổi nào học của lớp " +
-        class_bill +
-        "  trong tháng " +
-        month_bill +
-        "/" +
-        year_bill +
-        " ! ";
-      document.querySelector(".delete-cant").style.display = "block";
-      return;
-    }
-
-    $.ajax({
-      url: "../api/addBillps.php",
-      type: "POST",
-      data: {
-        name: name_bill,
-        month: month_bill,
-        year: year_bill,
-        class: class_bill,
-        student: name_student,
-      },
-      success: function (res) {
-        var text = document.getElementById("keyword").value;
-        showTableFinance(text, currentPage, collum, orderby, dateFilter);
-      },
-      error: function (xhr, status, error) {
-        console.error(error);
-      },
-    });
-
-    document.getElementById("tb1").innerHTML =
-      "Đã thêm hóa đơn " +
-      month_bill +
-      "/" +
-      year_bill +
-      "của học viên " +
-      " thành công! ";
-
-    document.querySelector(".add-success").style.display = "block";
-    document.getElementById("form-add-bill-ps").reset();
-    setTimeout(function () {
-      document.querySelector(".add-success").style.display = "none";
-    }, 1500);
   });
 
 document.getElementById("close").addEventListener("click", () => {
@@ -1031,9 +1233,7 @@ var hoaDon_select;
 
 var lsthp = [];
 function handleRowClick(index) {
-  // Xử lý sự kiện khi bấm vào một dòng
   // var selectedRow = rows[index].cells[1];
-  var selectedRow = filteredData_ds[index];
 
   document.getElementById("btn-tab-3-1").classList.add("active");
   document.getElementById("btn-tab-3-2").classList.remove("active");
@@ -1042,118 +1242,121 @@ function handleRowClick(index) {
   document.getElementById("tab-3-2").style.display = "none";
   document.getElementById("tab-3-3").style.display = "none";
 
-  maHD_select = selectedRow.MaHD;
+  maHD_select = index;
 
   for (var i = 0; i < dsHoaDon.length; i++) {
-    if (maHD_select == dsHoaDon[i].MaHD) hoaDon_select = dsHoaDon[i];
+    if (maHD_select == dsHoaDon[i].id) hoaDon_select = dsHoaDon[i];
   }
 
-  document.getElementById("id-bill-detail").textContent = maHD_select;
-  document.getElementById("name-bill-detail").textContent = hoaDon_select.TenHD;
+  console.log("hoaDon_select", hoaDon_select);
+
+  document.getElementById("id-bill-detail").textContent = hoaDon_select.id;
+  document.getElementById("name-bill-detail").textContent = hoaDon_select.name;
   document.getElementById("class-bill-detail").textContent =
-    hoaDon_select.MaLop;
-  document.getElementById("id-st-detail").textContent = hoaDon_select.MaHS;
+    hoaDon_select.class.code;
+  document.getElementById("center-bill-detail").textContent = getCenterNameById(
+    hoaDon_select.class.centerId
+  );
+  document.getElementById("id-st-detail").textContent =
+    hoaDon_select.user.student.id;
   document.getElementById("name-st-bill-detail").textContent =
-    hoaDon_select.TenHS;
-  document.getElementById("time-bill-detail").textContent =
-    hoaDon_select.ThoiGian;
-  document.getElementById("st-bill-detail").textContent = numberWithCommas(
-    hoaDon_select.SoTien
+    hoaDon_select.user.student.name;
+  document.getElementById(
+    "time-bill-detail"
+  ).textContent = `${hoaDon_select.forMonth}/${hoaDon_select.forYear}`;
+  document.getElementById("st-bill-detail").textContent = formatMoney(
+    hoaDon_select.originTotalMoney
   );
   document.getElementById("ghp-bill-detail").textContent =
-    hoaDon_select.GiamHocPhi + "%";
-  document.getElementById("stg-bill-detail").textContent = numberWithCommas(
-    hoaDon_select.SoTienGiam
+    hoaDon_select.studentClass.reducePercent + "%";
+  document.getElementById("stg-bill-detail").textContent = formatMoney(
+    hoaDon_select.totalReduceMoney
   );
-  document.getElementById("stpd-bill-detail").textContent = numberWithCommas(
-    hoaDon_select.SoTienPhaiDong
+  document.getElementById("stpd-bill-detail").textContent = formatMoney(
+    hoaDon_select.totalMoney
   );
-  document.getElementById("stdd-bill-detail").textContent = numberWithCommas(
-    hoaDon_select.SoTienDaDong
+  document.getElementById("stdd-bill-detail").textContent = formatMoney(
+    hoaDon_select.paidMoney
   );
-  document.getElementById("npcl-bill-detail").textContent = numberWithCommas(
-    hoaDon_select.NoPhiConLai
+  document.getElementById("npcl-bill-detail").textContent = formatMoney(
+    hoaDon_select.debtMoney
   );
-  document.getElementById("status-bill-detail").textContent =
-    hoaDon_select.TrangThai;
-  var hp = 0;
-  for (var i = 0; i < ds_hs_hocphi.length; i++) {
-    if (
-      hoaDon_select.MaHS == ds_hs_hocphi[i].MaHS &&
-      hoaDon_select.MaLop == ds_hs_hocphi[i].MaLop
-    )
-      hp = ds_hs_hocphi[i].HocPhi;
-  }
+  document.getElementById("status-bill-detail").textContent = getCostStatus(
+    hoaDon_select.status
+  );
+  // var hp = 0;
+  // for (var i = 0; i < ds_hs_hocphi.length; i++) {
+  //   if (
+  //     hoaDon_select.MaHS == ds_hs_hocphi[i].MaHS &&
+  //     hoaDon_select.MaLop == ds_hs_hocphi[i].MaLop
+  //   )
+  //     hp = ds_hs_hocphi[i].HocPhi;
+  // }
   document.getElementById("fee-bill-detail").textContent =
-    numberWithCommas(hp) + " /buổi";
+    numberWithCommas(hoaDon_select.class.fee) + " /buổi";
 
-  document.getElementById("session-bill-detail").textContent = parseInt(
-    hoaDon_select.SoTien / hp
-  );
-  if (hoaDon_select.TrangThai === "Hoàn thành") {
+  document.getElementById("session-bill-detail").textContent =
+    hoaDon_select.class.joinCount;
+
+  if (hoaDon_select.status === CostStatus.Done) {
     color = "green";
-  } else if (hoaDon_select.TrangThai === "Chưa đóng") {
+  } else if (hoaDon_select.status === CostStatus.Pending) {
     color = "red";
   } else {
     color = "blue";
   }
   document.getElementById("status-bill-detail").style.color = color;
 
-  document.getElementById("mahd-delete").value = hoaDon_select.MaHD;
-  document.getElementById("mahd-delete-2").value = hoaDon_select.MaHD;
+  document.getElementById("mahd-delete").value = hoaDon_select.id;
+  // document.getElementById("mahd-delete-2").value = hoaDon_select.id;
   modalBg.style.display = "block";
 
   // lich sử thu học phí
 
-  // var lsthp = [];
+  lsthp = hoaDon_select.transactions;
 
-  lsthp = [];
-  var k = 0;
-  for (var i = 0; i < ds_LS_THP.length; i++) {
-    if (maHD_select == ds_LS_THP[i].MaHD) lsthp[k++] = ds_LS_THP[i];
-  }
+  lsthp.sort((a, b) => new Date(b.timerTime) - new Date(a.timerTime));
 
   document.getElementById("id-bill-lsthp").textContent = numberWithCommas(
-    hoaDon_select.MaHD
+    hoaDon_select.id
   );
   document.getElementById("stpd-lsthp").textContent = numberWithCommas(
-    hoaDon_select.SoTienPhaiDong
+    hoaDon_select.totalMoney
   );
 
   var tbody = document.getElementById("tbody-lsthp");
 
   var rowsHTML = "";
   var tt = 0;
-  if (lsthp.length != "0") {
-    for (var i = 0; i < lsthp.length; i++) {
-      var giaoDich = lsthp[i];
+  if (lsthp.length != 0) {
+    lsthp.forEach((item, index) => {
       rowsHTML +=
         "<tr>" +
         "<td>" +
-        (i + 1) +
+        (index + 1) +
         "</td>" +
         "<td>" +
-        giaoDich.MaGD +
+        item.id +
         "</td>" +
         // '<td class="thoi-gian">' + convertDateFormat(giaoDich.ThoiGian) + '</td>' +
         '<td> <input type="date" value ="' +
-        giaoDich.ThoiGian +
+        item.timerTime.split("T")[0] +
         '" required>' +
         "</td>" +
         '<td  class="so-tien" pattern="[0-9,]+">' +
-        numberWithCommas(giaoDich.SoTien) +
+        numberWithCommas(item.totalMoney) +
         "</td>" +
         "<td>" +
         '<button type ="button" id="edit-lsthp-btn" class="btn-edit-lsthp" onclick="editRow(' +
-        i +
+        index +
         ')" style ="background-color: rosybrown">Sửa</button>' +
         '<button type ="button" id="delete-lsthp-btn" class="btn-edit-lsthp" onclick="deleteRow(' +
-        i +
+        item.id +
         ')" style ="background-color: rebeccapurple">Xoá</button>' +
         "</td>" +
         "</tr>";
-      tt += parseInt(giaoDich.SoTien);
-    }
+      tt += parseInt(item.totalMoney);
+    });
     rowsHTML +=
       "<tr>" +
       "<td> </td>" +
@@ -1171,7 +1374,7 @@ function handleRowClick(index) {
       "<td> </td>" +
       "<td> Nợ phí còn lại : </td>" +
       '<td id="npcl-amount-cell">' +
-      numberWithCommas(hoaDon_select.SoTienPhaiDong - tt) +
+      numberWithCommas(hoaDon_select.totalMoney - tt) +
       "</td>" +
       '<td "></td>' +
       "</tr>";
@@ -1302,38 +1505,43 @@ document
   });
 document
   .getElementById("delete-bill")
-  .addEventListener("click", function (event) {
+  .addEventListener("click", async function (event) {
     event.preventDefault();
 
     document.querySelector(".delete-bill-ques").style.display = "none";
 
-    if (hoaDon_select.SoTienDaDong != 0) {
+    if (hoaDon_select.paidMoney != 0) {
       document.querySelector(".delete-bill-ques-2").style.display = "block";
       return;
     }
 
-    $.ajax({
-      url: "../api/deleteBill.php",
-      type: "POST",
-      data: {
-        mahd: hoaDon_select.MaHD,
-      },
-      success: function (res) {
-        var text = document.getElementById("keyword").value;
-        showTableFinance(text, currentPage, collum, orderby, dateFilter);
-      },
-      error: function (xhr, status, error) {
-        console.error(error);
-      },
-    });
+    showSpinner();
+    try {
+      const response = await fetch(`${API_URL}/api/cost/${hoaDon_select.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-    document.querySelector("#modal-ques").style.display = "none";
-    modalBg.style.display = "none";
-    document.getElementById("tbody-lsthp").innerHTML = "";
-    document.querySelector(".delete-success").style.display = "block";
-    setTimeout(function () {
-      document.querySelector(".delete-success").style.display = "none";
-    }, 1500);
+      if (response.status === 200) {
+        await fetchCost();
+
+        searchList(currentPage);
+        hideSpinner();
+        document.querySelector("#modal-ques").style.display = "none";
+        modalBg.style.display = "none";
+        document.getElementById("tbody-lsthp").innerHTML = "";
+        document.querySelector(".delete-success").style.display = "block";
+        setTimeout(function () {
+          document.querySelector(".delete-success").style.display = "none";
+        }, 1500);
+      }
+    } catch (error) {
+      console.error("api error", error);
+      hideSpinner();
+    }
   });
 
 document
@@ -1344,33 +1552,10 @@ document
   });
 
 document
-  .getElementById("delete-bill-2")
-  .addEventListener("click", function (event) {
-    event.preventDefault();
-
-    $.ajax({
-      url: "../api/deleteBill.php",
-      type: "POST",
-      data: {
-        mahd: hoaDon_select.MaHD,
-      },
-      success: function (res) {
-        var text = document.getElementById("keyword").value;
-        showTableFinance(text, currentPage, collum, orderby, dateFilter);
-      },
-      error: function (xhr, status, error) {
-        console.error(error);
-      },
-    });
-
-    document.querySelector(".delete-bill-ques-2").style.display = "none";
+  .getElementById("btn-cancle-add-bill-warning")
+  .addEventListener("click", () => {
+    document.querySelector(".add-bill-warning").style.display = "none";
     document.querySelector("#modal-ques").style.display = "none";
-
-    modalBg.style.display = "none";
-    document.querySelector(".delete-success").style.display = "block";
-    setTimeout(function () {
-      document.querySelector(".delete-success").style.display = "none";
-    }, 1500);
   });
 
 // them giao dich
@@ -1405,12 +1590,15 @@ document.getElementById("btn-add-trans").addEventListener("click", () => {
 
 document
   .getElementById("form-add-trans")
-  .addEventListener("submit", function (event) {
+  .addEventListener("submit", async function (event) {
     var check = true;
     event.preventDefault();
 
     const money = document.getElementById("money-add-trans").value;
     const date = document.getElementById("date-add-trans").value;
+
+    console.log("date", convertDateToIOS(date));
+    console.log("money", convertToMoney(money));
 
     if (!money) {
       document.getElementById("lb-money-add-trans").textContent =
@@ -1419,88 +1607,91 @@ document
     } else document.getElementById("lb-money-add-trans").textContent = "";
 
     if (!check) return;
-    var text = document.getElementById("keyword").value;
 
-    $.ajax({
-      url: "../api/addTrans.php",
-      type: "POST",
-      data: {
-        id: hoaDon_select.MaHD,
-        date: date,
-        money: money,
-        key: text,
-      },
-      success: function (res) {
-        dsHoaDon = JSON.parse(res).hoadon;
-        ds_LS_THP = JSON.parse(res).lsthp;
+    try {
+      showSpinner();
+      const res = await fetch(`${API_URL}/api/transaction`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          costId: hoaDon_select.id,
+          totalMoney: convertToMoney(money),
+          timerTime: convertDateToIOS(date),
+        }),
+      });
+
+      if (res.status === 200) {
+        await fetchCost();
 
         for (var i = 0; i < dsHoaDon.length; i++) {
-          if (hoaDon_select.MaHD == dsHoaDon[i].MaHD)
-            hoaDon_select = dsHoaDon[i];
+          if (hoaDon_select.id == dsHoaDon[i].id) hoaDon_select = dsHoaDon[i];
         }
 
-        document.getElementById("stdd-bill-detail").textContent =
-          numberWithCommas(hoaDon_select.SoTienDaDong);
-        document.getElementById("npcl-bill-detail").textContent =
-          numberWithCommas(hoaDon_select.NoPhiConLai);
+        document.getElementById("stdd-bill-detail").textContent = formatMoney(
+          hoaDon_select.paidMoney
+        );
+        document.getElementById("npcl-bill-detail").textContent = formatMoney(
+          hoaDon_select.debtMoney
+        );
         document.getElementById("status-bill-detail").textContent =
-          hoaDon_select.TrangThai;
-        if (hoaDon_select.TrangThai === "Hoàn thành") {
+          getCostStatus(hoaDon_select.status);
+
+        if (hoaDon_select.status === CostStatus.Done) {
           color = "green";
-        } else if (hoaDon_select.TrangThai === "Chưa đóng") {
+        } else if (hoaDon_select.status === CostStatus.Pending) {
           color = "red";
         } else {
           color = "blue";
         }
+
         document.getElementById("status-bill-detail").style.color = color;
 
         //
-        lsthp = [];
-        var k = 0;
-        for (var i = 0; i < ds_LS_THP.length; i++) {
-          if (hoaDon_select.MaHD == ds_LS_THP[i].MaHD)
-            lsthp[k++] = ds_LS_THP[i];
-        }
+        lsthp = hoaDon_select.transactions;
+
+        lsthp.sort((a, b) => new Date(b.timerTime) - new Date(a.timerTime));
 
         document.getElementById("id-bill-lsthp").textContent = numberWithCommas(
-          hoaDon_select.MaHD
+          hoaDon_select.id
         );
         document.getElementById("stpd-lsthp").textContent = numberWithCommas(
-          hoaDon_select.SoTienPhaiDong
+          hoaDon_select.totalMoney
         );
 
         var rowsHTML = "";
         var tt = 0;
-        if (lsthp.length != "0") {
-          for (var i = 0; i < lsthp.length; i++) {
-            var giaoDich = lsthp[i];
+        if (lsthp.length != 0) {
+          lsthp.forEach((item, index) => {
             rowsHTML +=
               "<tr>" +
               "<td>" +
-              (i + 1) +
+              (index + 1) +
               "</td>" +
               "<td>" +
-              giaoDich.MaGD +
+              item.id +
               "</td>" +
               // '<td class="thoi-gian">' + convertDateFormat(giaoDich.ThoiGian) + '</td>' +
               '<td> <input type="date" value ="' +
-              giaoDich.ThoiGian +
+              item.timerTime.split("T")[0] +
               '" required>' +
               "</td>" +
               '<td  class="so-tien" pattern="[0-9,]+">' +
-              numberWithCommas(giaoDich.SoTien) +
-              " </td>" +
+              numberWithCommas(item.totalMoney) +
+              "</td>" +
               "<td>" +
               '<button type ="button" id="edit-lsthp-btn" class="btn-edit-lsthp" onclick="editRow(' +
-              i +
+              index +
               ')" style ="background-color: rosybrown">Sửa</button>' +
               '<button type ="button" id="delete-lsthp-btn" class="btn-edit-lsthp" onclick="deleteRow(' +
-              i +
+              item.id +
               ')" style ="background-color: rebeccapurple">Xoá</button>' +
               "</td>" +
               "</tr>";
-            tt += parseInt(giaoDich.SoTien);
-          }
+            tt += parseInt(item.totalMoney);
+          });
           rowsHTML +=
             "<tr>" +
             "<td> </td>" +
@@ -1518,7 +1709,7 @@ document
             "<td> </td>" +
             "<td> Nợ phí còn lại : </td>" +
             '<td id="npcl-amount-cell">' +
-            numberWithCommas(hoaDon_select.SoTienPhaiDong - tt) +
+            numberWithCommas(hoaDon_select.totalMoney - tt) +
             "</td>" +
             '<td "></td>' +
             "</tr>";
@@ -1528,27 +1719,28 @@ document
 
         document.getElementById("tbody-lsthp").innerHTML = rowsHTML;
 
-        var text = document.getElementById("keyword").value;
-        showTableFinance(text, currentPage, collum, orderby, dateFilter);
-      },
-      error: function (xhr, status, error) {
-        console.error(error);
-      },
-    });
+        searchList(currentPage);
 
-    document.querySelector("#div-add-trans").style.display = "none";
-    document.querySelector("#modal-add-trans").style.display = "none";
-    document.getElementById("money-add-trans").value = "";
-    document.getElementById("date-add-trans").value = "";
+        hideSpinner();
 
-    document.getElementById("tb1").innerHTML =
-      "Đã thêm trạng giao dịch thành công !";
+        document.querySelector("#div-add-trans").style.display = "none";
+        document.querySelector("#modal-add-trans").style.display = "none";
+        document.getElementById("money-add-trans").value = "";
+        document.getElementById("date-add-trans").value = "";
 
-    document.querySelector(".add-success").style.display = "block";
+        document.getElementById("tb1").innerHTML =
+          "Đã thêm trạng giao dịch thành công !";
 
-    setTimeout(function () {
-      document.querySelector(".add-success").style.display = "none";
-    }, 1500);
+        document.querySelector(".add-success").style.display = "block";
+
+        setTimeout(function () {
+          document.querySelector(".add-success").style.display = "none";
+        }, 1500);
+      }
+    } catch (error) {
+      hideSpinner();
+      console.log("add bill error", error);
+    }
   });
 
 document.getElementById("canle-add-trans").addEventListener("click", () => {
@@ -1561,7 +1753,7 @@ document.getElementById("canle-add-trans").addEventListener("click", () => {
 //sua lich su thu hoc phi
 function editRow(index) {
   tbody = document.getElementById("tbody-lsthp");
-  // var soTienCell = document.getElementsByClassName('so-tien')[index];
+  //var soTienCell = document.getElementsByClassName("so-tien")[index];
   var soTienCell = tbody.rows[index].querySelector(".so-tien");
 
   // Cho phép chỉnh sửa cột "Số tiền"
@@ -1612,21 +1804,21 @@ function getUpdateLSTHP() {
   for (var i = 0; i < rows.length - 2; i++) {
     var row = rows[i];
     var inputs = row.getElementsByTagName("input");
-    var maGD = row.cells[1].innerText;
-    var ngay = inputs[0].value;
-    var soTien = row.cells[3].innerText.replace(/,/g, "");
+    var id = parseInt(row.cells[1].innerText);
+    var timerTime = convertDateToIOS(inputs[0].value);
+    var totalMoney = convertToMoney(row.cells[3].innerText);
 
     updatedData.push({
-      maGD: maGD,
-      ngay: ngay,
-      soTien: soTien,
+      id: id,
+      timerTime: timerTime,
+      totalMoney: totalMoney,
     });
   }
 
   return updatedData;
 }
 
-function updateLSTHP() {
+async function updateLSTHP() {
   var selectedRows = Array.from(
     document.querySelectorAll('#tbody-lsthp input[type="checkbox"]:checked')
   ).map(function (checkbox) {
@@ -1654,113 +1846,94 @@ function updateLSTHP() {
     document.getElementById("npcl-amount-cell").textContent
   );
 
-  // Convert the updatedData to a JSON string
-  var jsonData = JSON.stringify(updatedData);
+  console.log("updatedData", updatedData);
 
-  // Create hidden input fields in the form to store the JSON data, total amount, and remaining fee
-  var hiddenInputData = document.createElement("input");
-  hiddenInputData.setAttribute("type", "hidden");
-  hiddenInputData.setAttribute("name", "updatedData");
-  hiddenInputData.setAttribute("value", jsonData);
+  try {
+    showSpinner();
+    const promises = updatedData.map((data) => {
+      return fetch(`${API_URL}/api/transaction/${data.id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          totalMoney: data.totalMoney,
+          timerTime: data.timerTime,
+        }),
+      });
+    });
 
-  var hiddenInputTotalAmount = document.createElement("input");
-  hiddenInputTotalAmount.setAttribute("type", "hidden");
-  hiddenInputTotalAmount.setAttribute("name", "totalAmount");
-  hiddenInputTotalAmount.setAttribute("value", totalAmount);
-
-  var hiddenInputRemainingFee = document.createElement("input");
-  hiddenInputRemainingFee.setAttribute("type", "hidden");
-  hiddenInputRemainingFee.setAttribute("name", "remainingFee");
-  hiddenInputRemainingFee.setAttribute("value", remainingFee);
-
-  var maHD = parseNumericValue(
-    document.getElementById("id-bill-lsthp").textContent
-  );
-
-  var hiddenInputmahd = document.createElement("input");
-  hiddenInputmahd.setAttribute("type", "hidden");
-  hiddenInputmahd.setAttribute("name", "maHD");
-  hiddenInputmahd.setAttribute("value", maHD);
-
-  var form = document.getElementById("form-edit-trans");
-  form.appendChild(hiddenInputData);
-  form.appendChild(hiddenInputTotalAmount);
-  form.appendChild(hiddenInputRemainingFee);
-  form.appendChild(hiddenInputmahd);
-
-  $.ajax({
-    url: "../api/updatelsthp.php",
-    type: "POST",
-    data: $("#form-edit-trans").serialize(),
-
-    success: function (res) {
-      dsHoaDon = JSON.parse(res).hoadon;
-      ds_LS_THP = JSON.parse(res).lsthp;
-
+    const responses = await Promise.all(promises);
+    const allSuccess = responses.every((response) => response.status === 200);
+    if (allSuccess) {
+      await fetchCost();
       for (var i = 0; i < dsHoaDon.length; i++) {
-        if (hoaDon_select.MaHD == dsHoaDon[i].MaHD) hoaDon_select = dsHoaDon[i];
+        if (hoaDon_select.id == dsHoaDon[i].id) hoaDon_select = dsHoaDon[i];
       }
 
-      document.getElementById("stdd-bill-detail").textContent =
-        numberWithCommas(hoaDon_select.SoTienDaDong);
-      document.getElementById("npcl-bill-detail").textContent =
-        numberWithCommas(hoaDon_select.NoPhiConLai);
-      document.getElementById("status-bill-detail").textContent =
-        hoaDon_select.TrangThai;
-      if (hoaDon_select.TrangThai === "Hoàn thành") {
+      document.getElementById("stdd-bill-detail").textContent = formatMoney(
+        hoaDon_select.paidMoney
+      );
+      document.getElementById("npcl-bill-detail").textContent = formatMoney(
+        hoaDon_select.debtMoney
+      );
+      document.getElementById("status-bill-detail").textContent = getCostStatus(
+        hoaDon_select.status
+      );
+
+      if (hoaDon_select.status === CostStatus.Done) {
         color = "green";
-      } else if (hoaDon_select.TrangThai === "Chưa đóng") {
+      } else if (hoaDon_select.status === CostStatus.Pending) {
         color = "red";
       } else {
         color = "blue";
       }
+
       document.getElementById("status-bill-detail").style.color = color;
 
       //
-      lsthp = [];
-      var k = 0;
-      for (var i = 0; i < ds_LS_THP.length; i++) {
-        if (hoaDon_select.MaHD == ds_LS_THP[i].MaHD) lsthp[k++] = ds_LS_THP[i];
-      }
+      lsthp = hoaDon_select.transactions;
+      lsthp.sort((a, b) => new Date(b.timerTime) - new Date(a.timerTime));
 
       document.getElementById("id-bill-lsthp").textContent = numberWithCommas(
-        hoaDon_select.MaHD
+        hoaDon_select.id
       );
       document.getElementById("stpd-lsthp").textContent = numberWithCommas(
-        hoaDon_select.SoTienPhaiDong
+        hoaDon_select.totalMoney
       );
 
       var rowsHTML = "";
       var tt = 0;
-      if (lsthp.length != "0") {
-        for (var i = 0; i < lsthp.length; i++) {
-          var giaoDich = lsthp[i];
+      if (lsthp.length != 0) {
+        lsthp.forEach((item, index) => {
           rowsHTML +=
             "<tr>" +
             "<td>" +
-            (i + 1) +
+            (index + 1) +
             "</td>" +
             "<td>" +
-            giaoDich.MaGD +
+            item.id +
             "</td>" +
+            // '<td class="thoi-gian">' + convertDateFormat(giaoDich.ThoiGian) + '</td>' +
             '<td> <input type="date" value ="' +
-            giaoDich.ThoiGian +
+            item.timerTime.split("T")[0] +
             '" required>' +
             "</td>" +
             '<td  class="so-tien" pattern="[0-9,]+">' +
-            numberWithCommas(giaoDich.SoTien) +
-            " </td>" +
+            numberWithCommas(item.totalMoney) +
+            "</td>" +
             "<td>" +
             '<button type ="button" id="edit-lsthp-btn" class="btn-edit-lsthp" onclick="editRow(' +
-            i +
+            index +
             ')" style ="background-color: rosybrown">Sửa</button>' +
             '<button type ="button" id="delete-lsthp-btn" class="btn-edit-lsthp" onclick="deleteRow(' +
-            i +
+            item.id +
             ')" style ="background-color: rebeccapurple">Xoá</button>' +
             "</td>" +
             "</tr>";
-          tt += parseInt(giaoDich.SoTien);
-        }
+          tt += parseInt(item.totalMoney);
+        });
         rowsHTML +=
           "<tr>" +
           "<td> </td>" +
@@ -1778,7 +1951,7 @@ function updateLSTHP() {
           "<td> </td>" +
           "<td> Nợ phí còn lại : </td>" +
           '<td id="npcl-amount-cell">' +
-          numberWithCommas(hoaDon_select.SoTienPhaiDong - tt) +
+          numberWithCommas(hoaDon_select.totalMoney - tt) +
           "</td>" +
           '<td "></td>' +
           "</tr>";
@@ -1788,65 +1961,153 @@ function updateLSTHP() {
 
       document.getElementById("tbody-lsthp").innerHTML = rowsHTML;
 
-      var text = document.getElementById("keyword").value;
-      showTableFinance(text, currentPage, collum, orderby, dateFilter);
-    },
-    error: function (xhr, status, error) {
-      console.error(error);
-    },
-  });
+      searchList(currentPage);
 
-  document.getElementById("tb1").innerHTML = "Đã cập nhật thành công!";
+      hideSpinner();
+      document.getElementById("tb1").innerHTML = "Đã cập nhật thành công!";
 
-  document.querySelector(".add-success").style.display = "block";
+      document.querySelector(".add-success").style.display = "block";
 
-  setTimeout(function () {
-    document.querySelector(".add-success").style.display = "none";
-  }, 1500);
+      setTimeout(function () {
+        document.querySelector(".add-success").style.display = "none";
+      }, 1500);
+    }
+  } catch (error) {
+    hideSpinner();
+    console.log("Error:", error);
+  }
+
   // Submit the form
 }
 
-// Xoa giao dich lsthp
-
-function deleteRow(index) {
+async function deleteRow(index) {
   document.querySelector(".delete-ques-trans").style.display = "block";
   document.querySelector("#modal-ques-trans").style.display = "block";
 
-  document.getElementById("delete-trans").addEventListener("click", () => {
-    document.querySelector(".delete-ques-trans").style.display = "none";
-    document.querySelector("#modal-ques-trans").style.display = "none";
+  document
+    .getElementById("delete-trans")
+    .addEventListener("click", async () => {
+      document.querySelector(".delete-ques-trans").style.display = "none";
+      document.querySelector("#modal-ques-trans").style.display = "none";
 
-    tbody = document.getElementById("tbody-lsthp");
-    tbody.deleteRow(index);
+      showSpinner();
+      try {
+        const response = await fetch(`${API_URL}/api/transaction/${index}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-    var tt = parseNumericValue(
-      document.getElementById("total-amount-cell").textContent
-    );
+        if (response.status === 200) {
+          await fetchCost();
 
-    tt -= parseInt(lsthp[index].SoTien);
-    document.getElementById("total-amount-cell").textContent =
-      numberWithCommas(tt);
+          for (var i = 0; i < dsHoaDon.length; i++) {
+            if (hoaDon_select.id == dsHoaDon[i].id) hoaDon_select = dsHoaDon[i];
+          }
 
-    var remainingFee = parseInt(hoaDon_select.SoTienPhaiDong - tt);
-    document.getElementById("npcl-amount-cell").textContent =
-      numberWithCommas(remainingFee);
+          document.getElementById("stdd-bill-detail").textContent = formatMoney(
+            hoaDon_select.paidMoney
+          );
+          document.getElementById("npcl-bill-detail").textContent = formatMoney(
+            hoaDon_select.debtMoney
+          );
+          document.getElementById("status-bill-detail").textContent =
+            getCostStatus(hoaDon_select.status);
 
-    lsthp.splice(index, 1);
-    var rows = tbody.querySelectorAll("tr");
-    // rows.length -=1;
-    for (var i = index; i < lsthp.length; i++) {
-      var row = tbody.rows[i];
-      // var row2 = tbody.rows[i];
-      row.cells[0].textContent = i + 1;
+          if (hoaDon_select.status === CostStatus.Done) {
+            color = "green";
+          } else if (hoaDon_select.status === CostStatus.Pending) {
+            color = "red";
+          } else {
+            color = "blue";
+          }
 
-      row
-        .querySelector("#edit-lsthp-btn")
-        .setAttribute("onclick", "editRow(" + i + ")");
-      row
-        .querySelector("#delete-lsthp-btn")
-        .setAttribute("onclick", "deleteRow(" + i + ")");
-    }
-  });
+          document.getElementById("status-bill-detail").style.color = color;
+
+          //
+          lsthp = hoaDon_select.transactions;
+          lsthp.sort((a, b) => new Date(b.timerTime) - new Date(a.timerTime));
+
+          document.getElementById("id-bill-lsthp").textContent =
+            numberWithCommas(hoaDon_select.id);
+          document.getElementById("stpd-lsthp").textContent = numberWithCommas(
+            hoaDon_select.totalMoney
+          );
+
+          var rowsHTML = "";
+          var tt = 0;
+          if (lsthp.length != 0) {
+            lsthp.forEach((item, index) => {
+              rowsHTML +=
+                "<tr>" +
+                "<td>" +
+                (index + 1) +
+                "</td>" +
+                "<td>" +
+                item.id +
+                "</td>" +
+                // '<td class="thoi-gian">' + convertDateFormat(giaoDich.ThoiGian) + '</td>' +
+                '<td> <input type="date" value ="' +
+                item.timerTime.split("T")[0] +
+                '" required>' +
+                "</td>" +
+                '<td  class="so-tien" pattern="[0-9,]+">' +
+                numberWithCommas(item.totalMoney) +
+                "</td>" +
+                "<td>" +
+                '<button type ="button" id="edit-lsthp-btn" class="btn-edit-lsthp" onclick="editRow(' +
+                index +
+                ')" style ="background-color: rosybrown">Sửa</button>' +
+                '<button type ="button" id="delete-lsthp-btn" class="btn-edit-lsthp" onclick="deleteRow(' +
+                item.id +
+                ')" style ="background-color: rebeccapurple">Xoá</button>' +
+                "</td>" +
+                "</tr>";
+              tt += parseInt(item.totalMoney);
+            });
+            rowsHTML +=
+              "<tr>" +
+              "<td> </td>" +
+              "<td> </td>" +
+              "<td> Tổng tiền : </td>" +
+              '<td id="total-amount-cell">' +
+              numberWithCommas(tt) +
+              "</td>" +
+              '<td > <button  onclick="updateLSTHP()" class="btn-edit-lsthp"  id="btn-update-lsthp" style ="background-color: orangered">Cập nhật</button></td>' +
+              "</tr>";
+
+            rowsHTML +=
+              "<tr>" +
+              "<td> </td>" +
+              "<td> </td>" +
+              "<td> Nợ phí còn lại : </td>" +
+              '<td id="npcl-amount-cell">' +
+              numberWithCommas(hoaDon_select.totalMoney - tt) +
+              "</td>" +
+              '<td "></td>' +
+              "</tr>";
+          } else
+            rowsHTML +=
+              "<td> <strong> Hóa đơn chưa có dữ liệu thanh toán  </strong> </td>";
+
+          document.getElementById("tbody-lsthp").innerHTML = rowsHTML;
+
+          searchList(currentPage);
+
+          hideSpinner();
+
+          document.querySelector(".delete-success").style.display = "block";
+          setTimeout(function () {
+            document.querySelector(".delete-success").style.display = "none";
+          }, 1500);
+        }
+      } catch (error) {
+        console.error("api error", error);
+        hideSpinner();
+      }
+    });
 
   document
     .getElementById("btn-cancle-delete-trans")
@@ -1884,9 +2145,9 @@ document
   });
 
 document.getElementById("btn-tab1").addEventListener("click", () => {
-  window.location.href = "./manageFinance.php";
+  window.location.href = "./manageFinance.html";
 });
 
 document.getElementById("btn-tab3").addEventListener("click", () => {
-  window.location.href = "./manageHistoryFinance.php";
+  window.location.href = "./manageHistoryFinance.html";
 });
